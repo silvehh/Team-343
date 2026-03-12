@@ -4,7 +4,6 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -55,7 +54,7 @@ export default function FAQ() {
             id="panel1d-header"
           >
             <Typography component="span" variant="subtitle2">
-              How do I contact customer support if I have a question or issue?
+              What transportation services does SUMMS integrate with?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -64,10 +63,11 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: "100%", md: "70%" } }}
             >
-              You can reach our customer support team by emailing&nbsp;
-              <Link href="mailto:support@email.com">support@email.com</Link>
-              &nbsp;or calling our toll-free number. We&apos;re here to assist
-              you promptly.
+              SUMMS integrates with all major Montreal transportation providers
+              including STM (metro & bus), exo (regional transit), BIXI (bike
+              sharing), RTL (Longueuil transit), and multiple vehicle rental
+              services like Communauto. You can compare and book all these
+              options in one app.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -81,7 +81,7 @@ export default function FAQ() {
             id="panel2d-header"
           >
             <Typography component="span" variant="subtitle2">
-              Can I return the product if it doesn&apos;t meet my expectations?
+              How do I book and pay for vehicle rentals through SUMMS?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -90,9 +90,10 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: "100%", md: "70%" } }}
             >
-              Absolutely! We offer a hassle-free return policy. If you&apos;re
-              not completely satisfied, you can return the product within
-              [number of days] days for a full refund or exchange.
+              With a Premium or Family subscription, simply search for available
+              vehicles, select your preferred option, confirm your reservation,
+              and complete payment securely through the app. You can manage,
+              extend, or return rentals directly from your dashboard.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -106,7 +107,7 @@ export default function FAQ() {
             id="panel3d-header"
           >
             <Typography component="span" variant="subtitle2">
-              What makes your product stand out from others in the market?
+              Can I use SUMMS without a subscription?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -115,10 +116,9 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: "100%", md: "70%" } }}
             >
-              Our product distinguishes itself through its adaptability,
-              durability, and innovative features. We prioritize user
-              satisfaction and continually strive to exceed expectations in
-              every aspect.
+              Yes! Our Basic plan is completely free. You can plan trips,
+              compare transportation options, and view schedules without any
+              cost. Upgrade to Premium to unlock booking and payment features.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -132,7 +132,7 @@ export default function FAQ() {
             id="panel4d-header"
           >
             <Typography component="span" variant="subtitle2">
-              Is there a warranty on the product, and what does it cover?
+              Can I cancel or change my subscription plan?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -141,10 +141,36 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: "100%", md: "70%" } }}
             >
-              Yes, our product comes with a [length of warranty] warranty. It
-              covers defects in materials and workmanship. If you encounter any
-              issues covered by the warranty, please contact our customer
-              support for assistance.
+              Absolutely! You can upgrade, downgrade, or cancel your
+              subscription at any time from your profile settings. Changes take
+              effect immediately, and you'll only be charged for what you use.
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion
+          expanded={expanded.includes("panel5")}
+          onChange={handleChange("panel5")}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel5d-content"
+            id="panel5d-header"
+          >
+            <Typography component="span" variant="subtitle2">
+              Is my payment information secure?
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography
+              variant="body2"
+              gutterBottom
+              sx={{ maxWidth: { sm: "100%", md: "70%" } }}
+            >
+              Yes, we use bank-level encryption and secure payment processing
+              through trusted external payment providers. Your payment
+              information is never stored directly on our servers and all
+              transactions are protected with industry-standard security
+              measures.
             </Typography>
           </AccordionDetails>
         </Accordion>

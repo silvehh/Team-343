@@ -7,32 +7,59 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
 
-import DevicesRoundedIcon from "@mui/icons-material/DevicesRounded";
-import EdgesensorHighRoundedIcon from "@mui/icons-material/EdgesensorHighRounded";
-import ViewQuiltRoundedIcon from "@mui/icons-material/ViewQuiltRounded";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import PedalBikeIcon from "@mui/icons-material/PedalBike";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import NatureIcon from "@mui/icons-material/Nature";
 
 const items = [
   {
-    icon: <ViewQuiltRoundedIcon />,
-    title: "Dashboard",
+    icon: <CompareArrowsIcon />,
+    title: "Smart Trip Comparison",
     description:
-      "This item could provide a snapshot of the most important metrics or data points related to the product.",
+      "Compare public transit, bike shares, and vehicle rentals side-by-side. Get instant cost, time, and environmental impact estimates for your journey.",
     imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/dash-light.png")`,
     imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/dash-dark.png")`,
   },
   {
-    icon: <EdgesensorHighRoundedIcon />,
-    title: "Mobile integration",
+    icon: <DirectionsCarIcon />,
+    title: "Vehicle Rental Management",
     description:
-      "This item could provide information about the mobile app version of the product.",
+      "Browse, reserve, and manage vehicle rentals from multiple providers. Track your reservations, extend rentals, and handle returns all in one place.",
     imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/mobile-light.png")`,
     imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/mobile-dark.png")`,
   },
   {
-    icon: <DevicesRoundedIcon />,
-    title: "Available on all platforms",
+    icon: <DirectionsBusIcon />,
+    title: "Public Transit Integration",
     description:
-      "This item could let users know the product is available on all platforms, such as web, mobile, and desktop.",
+      "Access real-time transit schedules, routes, and delays from all major transit providers in your city. Plan multi-modal trips with ease.",
+    imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/devices-light.png")`,
+    imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/devices-dark.png")`,
+  },
+  {
+    icon: <PedalBikeIcon />,
+    title: "Bike Share Network",
+    description:
+      "Find and unlock bikes from all major bike-sharing services. Check availability, compare prices, and get directions to the nearest station.",
+    imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/dash-light.png")`,
+    imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/dash-dark.png")`,
+  },
+  {
+    icon: <AccessTimeIcon />,
+    title: "Real-time Updates",
+    description:
+      "Stay informed with live traffic updates, service delays, and dynamic route adjustments. Never miss your connection or waste time waiting.",
+    imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/mobile-light.png")`,
+    imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/mobile-dark.png")`,
+  },
+  {
+    icon: <NatureIcon />,
+    title: "Eco-Friendly Choices",
+    description:
+      "See the environmental impact of each travel option. Make sustainable choices with carbon footprint tracking and green transportation rewards.",
     imageLight: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/devices-light.png")`,
     imageDark: `url("${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/images/templates/templates-images/devices-dark.png")`,
   },
@@ -151,15 +178,15 @@ export default function Features() {
           gutterBottom
           sx={{ color: "text.primary" }}
         >
-          Product features
+          Everything You Need to Move Smarter
         </Typography>
         <Typography
           variant="body1"
           sx={{ color: "text.secondary", mb: { xs: 2, sm: 4 } }}
         >
-          Provide a brief overview of the key features of the product. For
-          example, you could list the number of features, their types or
-          benefits, and add-ons.
+          SUMMS brings together all your transportation options in one powerful
+          platform. Compare, book, and manage your entire journey with features
+          designed for modern urban mobility.
         </Typography>
       </Box>
       <Box

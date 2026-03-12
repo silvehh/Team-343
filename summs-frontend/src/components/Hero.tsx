@@ -1,12 +1,8 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import InputLabel from "@mui/material/InputLabel";
-import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import visuallyHidden from "@mui/utils/visuallyHidden";
 import { styled } from "@mui/material/styles";
 
 const StyledBox = styled("div")(({ theme }) => ({
@@ -73,7 +69,7 @@ export default function Hero() {
               fontSize: "clamp(3rem, 10vw, 3.5rem)",
             }}
           >
-            Our&nbsp;latest&nbsp;
+            Simplify Your&nbsp;
             <Typography
               component="span"
               variant="h1"
@@ -85,7 +81,7 @@ export default function Hero() {
                 }),
               })}
             >
-              products
+              Urban Mobility
             </Typography>
           </Typography>
           <Typography
@@ -95,41 +91,31 @@ export default function Hero() {
               width: { sm: "100%", md: "80%" },
             }}
           >
-            Explore our cutting-edge dashboard, delivering high-quality
-            solutions tailored to your needs. Elevate your experience with
-            top-tier features and services.
+            Compare and book public transit, bike shares, and vehicle rentals
+            all in one place. SUMMS makes sustainable transportation easy,
+            affordable, and accessible for everyone.
           </Typography>
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1}
             useFlexGap
-            sx={{ pt: 2, width: { xs: "100%", sm: "350px" } }}
+            sx={{ pt: 2, width: { xs: "100%", sm: "auto" } }}
           >
-            <InputLabel htmlFor="email-hero" sx={visuallyHidden}>
-              Email
-            </InputLabel>
-            <TextField
-              id="email-hero"
-              hiddenLabel
-              size="small"
-              variant="outlined"
-              aria-label="Enter your email address"
-              placeholder="Your email address"
-              fullWidth
-              slotProps={{
-                htmlInput: {
-                  autoComplete: "off",
-                  "aria-label": "Enter your email address",
-                },
-              }}
-            />
             <Button
               variant="contained"
               color="primary"
-              size="small"
+              size="large"
               sx={{ minWidth: "fit-content" }}
             >
-              Start now
+              Get Started
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              sx={{ minWidth: "fit-content" }}
+            >
+              Compare Options
             </Button>
           </Stack>
           <Typography
@@ -137,11 +123,7 @@ export default function Hero() {
             color="text.secondary"
             sx={{ textAlign: "center" }}
           >
-            By clicking &quot;Start now&quot; you agree to our&nbsp;
-            <Link href="#" color="primary">
-              Terms & Conditions
-            </Link>
-            .
+            Join thousands of commuters making smarter travel choices every day.
           </Typography>
         </Stack>
         <StyledBox id="image" />
