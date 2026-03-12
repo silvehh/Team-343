@@ -1,5 +1,5 @@
-import Button from "@mui/material/Button";
+import MarketingPage from "./MarketingPage";
 
 export default function ButtonUsage() {
-  return <Button variant="contained">Hello world</Button>;
+  return <MarketingPage></MarketingPage>;
 }
