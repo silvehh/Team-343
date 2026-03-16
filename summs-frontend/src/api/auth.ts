@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "./config";
+
 export type AuthMode = "signin" | "signup";
 
 export type AuthResponse = {
@@ -5,8 +7,6 @@ export type AuthResponse = {
   email: string;
   message: string;
 };
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 const getStringField = (value: unknown): string | null => {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
