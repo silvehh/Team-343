@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test:unit": "vitest",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-types": "openapi-typescript http://localhost:8080/v3/api-docs -o src/api/types.ts"
@@ -33,6 +34,7 @@
     "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
   }
 }
