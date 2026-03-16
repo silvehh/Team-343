@@ -9,10 +9,15 @@ import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import MenuItem from "@mui/material/MenuItem";
 import Drawer from "@mui/material/Drawer";
+import Typography from "@mui/material/Typography";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 import Sitemark from "./SitemarkIcon";
+import AuthDialog from "./AuthDialog";
+import { type AuthMode } from "../api/auth";
+
+const AUTH_EMAIL_KEY = "summs.auth.email";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -32,9 +37,33 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
+  const [authMode, setAuthMode] = React.useState<AuthMode>("signin");
+  const [currentUserEmail, setCurrentUserEmail] = React.useState(
+    () => localStorage.getItem(AUTH_EMAIL_KEY) ?? "",
+  );
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
+  };
+
+  const openAuthDialog = (mode: AuthMode) => {
+    setAuthMode(mode);
+    setIsAuthDialogOpen(true);
+  };
+
+  const closeAuthDialog = () => {
+    setIsAuthDialogOpen(false);
+  };
+
+  const handleLogout = () => {
+    setCurrentUserEmail("");
+    localStorage.removeItem(AUTH_EMAIL_KEY);
+  };
+
+  const handleAuthSuccess = (email: string) => {
+    setCurrentUserEmail(email);
+    localStorage.setItem(AUTH_EMAIL_KEY, email);
   };
 
   return (
@@ -92,12 +121,25 @@ export default function AppAppBar() {
               alignItems: "center",
             }}
           >
-            <Button color="primary" variant="text" size="small">
-              Sign in
-            </Button>
-            <Button color="primary" variant="contained" size="small">
-              Sign up
-            </Button>
+            {currentUserEmail ? (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+                  {currentUserEmail}
+                </Typography>
+                <Button color="primary" variant="outlined" size="small" onClick={handleLogout}>
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button color="primary" variant="text" size="small" onClick={() => openAuthDialog("signin")}>
+                  Sign in
+                </Button>
+                <Button color="primary" variant="contained" size="small" onClick={() => openAuthDialog("signup")}>
+                  Sign up
+                </Button>
+              </>
+            )}
             <ColorModeIconDropdown />
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
@@ -135,20 +177,51 @@ export default function AppAppBar() {
                 <MenuItem>Blog</MenuItem>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth>
-                    Sign up
-                  </Button>
+                  {currentUserEmail ? (
+                    <Button color="primary" variant="outlined" fullWidth onClick={handleLogout}>
+                      Log out
+                    </Button>
+                  ) : (
+                    <Button
+                      color="primary"
+                      variant="contained"
+                      fullWidth
+                      onClick={() => {
+                        setOpen(false);
+                        openAuthDialog("signup");
+                      }}
+                    >
+                      Sign up
+                    </Button>
+                  )}
                 </MenuItem>
                 <MenuItem>
-                  <Button color="primary" variant="outlined" fullWidth>
-                    Sign in
-                  </Button>
+                  {!currentUserEmail && (
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => {
+                        setOpen(false);
+                        openAuthDialog("signin");
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                  )}
                 </MenuItem>
               </Box>
             </Drawer>
           </Box>
         </StyledToolbar>
       </Container>
+
+      <AuthDialog
+        open={isAuthDialogOpen}
+        initialMode={authMode}
+        onClose={closeAuthDialog}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </AppBar>
   );
 }
