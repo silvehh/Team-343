@@ -1,6 +1,7 @@
 package com.team.summs_backend.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
@@ -47,23 +47,10 @@ class AuthControllerTest {
         when(authService.signup(request))
             .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered"));
 
-        ResponseEntity<AuthResponse> response = authController.signup(request);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authController.signup(request));
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Email is already registered", response.getBody().message());
-        assertEquals("user@example.com", response.getBody().email());
-    }
-
-    @Test
-    void signupShouldReturnConflictWhenDatabaseThrowsDuplicateError() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678");
-
-        when(authService.signup(request)).thenThrow(new DataIntegrityViolationException("duplicate"));
-
-        ResponseEntity<AuthResponse> response = authController.signup(request);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Email is already registered", response.getBody().message());
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+        assertEquals("Email is already registered", ex.getReason());
     }
 
     @Test
@@ -71,13 +58,12 @@ class AuthControllerTest {
         LoginRequest request = new LoginRequest("user@example.com", "wrong-password");
 
         when(authService.login(request))
-            .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+            .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password"));
 
-        ResponseEntity<AuthResponse> response = authController.login(request);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authController.login(request));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("Incorrect email or password", response.getBody().message());
-        assertEquals("user@example.com", response.getBody().email());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        assertEquals("Incorrect email or password", ex.getReason());
     }
 
     @Test

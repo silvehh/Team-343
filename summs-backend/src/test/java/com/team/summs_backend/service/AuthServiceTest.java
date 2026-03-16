@@ -110,7 +110,7 @@ class AuthServiceTest {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
 
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
-        assertEquals("Invalid email or password", ex.getReason());
+        assertEquals("Incorrect email or password", ex.getReason());
     }
 
     @Test
@@ -125,6 +125,6 @@ class AuthServiceTest {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
 
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
-        assertEquals("Invalid email or password", ex.getReason());
+        assertEquals("Incorrect email or password", ex.getReason());
     }
 }

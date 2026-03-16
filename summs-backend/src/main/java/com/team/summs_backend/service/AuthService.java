@@ -41,7 +41,6 @@ public class AuthService {
             AppUser saved = appUserRepository.save(appUser);
             return new AuthResponse(saved.getId(), saved.getEmail(), "Signup successful");
         } catch (DataIntegrityViolationException ex) {
-            // researched and found that 409 (CONFLICT) is the most appropriate status code for duplicate email signups
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered", ex);
         }
     }
@@ -50,10 +49,10 @@ public class AuthService {
         String email = normalizeAndValidateEmail(request.email());
 
         AppUser appUser = appUserRepository.findByEmailIgnoreCase(email)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password"));
 
         if (!passwordEncoder.matches(request.password(), appUser.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password");
         }
 
         return new AuthResponse(appUser.getId(), appUser.getEmail(), "Login successful");

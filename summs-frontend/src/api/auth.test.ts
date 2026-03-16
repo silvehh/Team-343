@@ -1,22 +1,23 @@
+import axios from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { submitAuth } from "./auth";
 
+vi.mock("axios", () => ({
+  default: {
+    post: vi.fn(),
+  },
+  isAxiosError: (error: unknown) => Boolean(error && typeof error === "object" && "isAxiosError" in (error as object)),
+}));
+
 describe("submitAuth", () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
   it("returns auth response when request succeeds", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ userId: 1, email: "user@example.com", message: "Login successful" }),
-        headers: { get: () => "application/json" },
-      }),
-    );
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { userId: 1, email: "user@example.com", message: "Login successful" },
+    } as never);
 
     const response = await submitAuth("signin", "user@example.com", "12345678");
 
@@ -25,29 +26,25 @@ describe("submitAuth", () => {
   });
 
   it("returns backend signin error message", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
+    vi.mocked(axios.post).mockRejectedValue({
+      isAxiosError: true,
+      response: {
         status: 401,
-        json: async () => ({ message: "Invalid email or password" }),
-        headers: { get: () => "application/json" },
-      }),
-    );
+        data: { message: "Invalid email or password" },
+      },
+    });
 
     await expect(submitAuth("signin", "user@example.com", "wrong-pass")).rejects.toThrow("Invalid email or password");
   });
 
   it("returns backend signup error message", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
+    vi.mocked(axios.post).mockRejectedValue({
+      isAxiosError: true,
+      response: {
         status: 409,
-        json: async () => ({ message: "Email is already registered" }),
-        headers: { get: () => "application/json" },
-      }),
-    );
+        data: { message: "Email is already registered" },
+      },
+    });
 
     await expect(submitAuth("signup", "existing@example.com", "12345678")).rejects.toThrow("Email is already registered");
   });

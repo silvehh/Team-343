@@ -28,12 +28,6 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formError, setFormError] = React.useState("");
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = React.useState(false);
-  const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] = React.useState("");
 
   React.useEffect(() => {
     if (!open) {
@@ -45,55 +39,33 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     setPassword("");
     setConfirmPassword("");
     setFormError("");
-    setEmailError(false);
-    setEmailErrorMessage("");
-    setPasswordError(false);
-    setPasswordErrorMessage("");
-    setConfirmPasswordError(false);
-    setConfirmPasswordErrorMessage("");
     setIsSubmitting(false);
   }, [open, initialMode]);
 
   const validateInputs = () => {
-    let isValid = true;
-
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setEmailError(true);
-      setEmailErrorMessage("Please enter a valid email address.");
-      isValid = false;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage("");
+      setFormError("Please enter a valid email address.");
+      return false;
     }
 
     if (!password || password.length < 8) {
-      setPasswordError(true);
-      setPasswordErrorMessage("Password must be at least 8 characters long.");
-      isValid = false;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage("");
+      setFormError("Password must be at least 8 characters long.");
+      return false;
     }
 
     if (authMode === "signup") {
       if (!confirmPassword || confirmPassword.length < 8) {
-        setConfirmPasswordError(true);
-        setConfirmPasswordErrorMessage("Please confirm your password.");
-        isValid = false;
-      } else if (password !== confirmPassword) {
-        setConfirmPasswordError(true);
-        setConfirmPasswordErrorMessage("Passwords do not match.");
-        isValid = false;
-      } else {
-        setConfirmPasswordError(false);
-        setConfirmPasswordErrorMessage("");
+        setFormError("Please confirm your password.");
+        return false;
       }
-    } else {
-      setConfirmPasswordError(false);
-      setConfirmPasswordErrorMessage("");
+
+      if (password !== confirmPassword) {
+        setFormError("Passwords do not match.");
+        return false;
+      }
     }
 
-    return isValid;
+    return true;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -143,9 +115,6 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
                 fullWidth
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                error={emailError}
-                helperText={emailErrorMessage}
-                color={emailError ? "error" : "primary"}
               />
             </FormControl>
 
@@ -161,9 +130,6 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
                 fullWidth
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                color={passwordError ? "error" : "primary"}
               />
             </FormControl>
 
@@ -180,14 +146,11 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
                   fullWidth
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
-                  error={confirmPasswordError}
-                  helperText={confirmPasswordErrorMessage}
-                  color={confirmPasswordError ? "error" : "primary"}
                 />
               </FormControl>
             )}
           </Box>
-          {formError && <Alert severity="error">{formError}</Alert>}
+          {formError && <Alert severity="warning" sx={{ mt: 2 }}>{formError}</Alert>}
         </DialogContent>
         <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 3 }}>
           <Typography sx={{ color: "text.secondary" }}>

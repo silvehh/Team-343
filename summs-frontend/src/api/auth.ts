@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./config";
+import axios, { isAxiosError } from "axios";
 import type { AuthResponse } from "./types";
 
 export type AuthMode = "signin" | "signup";
@@ -7,47 +8,44 @@ const getStringField = (value: unknown): string | null => {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 };
 
-const parseErrorMessage = async (_mode: AuthMode, response: Response) => {
-  const contentType = response.headers.get("content-type") ?? "";
+const parseErrorMessage = (error: unknown) => {
+  if (isAxiosError(error)) {
+    const data = error.response?.data;
 
-  if (contentType.includes("application/json")) {
-    try {
-      const body = (await response.json()) as Record<string, unknown>;
-
+    if (data && typeof data === "object") {
+      const record = data as Record<string, unknown>;
       const message =
-        getStringField(body.message) ??
-        getStringField(body.detail) ??
-        getStringField(body.error) ??
-        getStringField(body.title);
+        getStringField(record.message) ??
+        getStringField(record.detail) ??
+        getStringField(record.error) ??
+        getStringField(record.title);
 
       if (message) {
         return message;
       }
-    } catch {
-      // Fall through to status-based fallback.
     }
-  } else {
-    const text = (await response.text()).trim();
-    if (text) {
-      return text;
+
+    if (typeof data === "string" && data.trim().length > 0) {
+      return data;
+    }
+
+    if (error.response?.status) {
+      return `Request failed (${error.response.status}). Please try again.`;
     }
   }
 
-  return `Request failed (${response.status}). Please try again.`;
+  return "Could not reach the server. Make sure the backend is running.";
 };
 
 export const submitAuth = async (mode: AuthMode, email: string, password: string): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/${mode === "signin" ? "login" : "signup"}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-  });
+  try {
+    const response = await axios.post<AuthResponse>(
+      `${API_BASE_URL}/api/auth/${mode === "signin" ? "login" : "signup"}`,
+      { email, password },
+    );
 
-  if (!response.ok) {
-    throw new Error(await parseErrorMessage(mode, response));
+    return response.data;
+  } catch (error) {
+    throw new Error(parseErrorMessage(error));
   }
-
-  return (await response.json()) as AuthResponse;
 };
