@@ -12,7 +12,7 @@ const getStringField = (value: unknown): string | null => {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 };
 
-const parseErrorMessage = async (mode: AuthMode, response: Response) => {
+const parseErrorMessage = async (_mode: AuthMode, response: Response) => {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
