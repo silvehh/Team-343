@@ -1,11 +1,13 @@
 package com.team.summs_backend.controller;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.team.summs_backend.dto.AuthResponse;
 import com.team.summs_backend.dto.LoginRequest;
@@ -24,7 +26,18 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new AuthResponse(null, request.email(), "Email is already registered"));
+            }
+            throw ex;
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new AuthResponse(null, request.email(), "Email is already registered"));
+        }
     }
 
     @PostMapping("/login")

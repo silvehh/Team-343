@@ -37,8 +37,13 @@ public class AuthService {
         appUser.setEmail(email);
         appUser.setPasswordHash(passwordEncoder.encode(request.password()));
 
-        AppUser saved = appUserRepository.save(appUser);
-        return new AuthResponse(saved.getId(), saved.getEmail(), "Signup successful");
+        try {
+            AppUser saved = appUserRepository.save(appUser);
+            return new AuthResponse(saved.getId(), saved.getEmail(), "Signup successful");
+        } catch (DataIntegrityViolationException ex) {
+            // researched and found that 409 (CONFLICT) is the most appropriate status code for duplicate email signups
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered", ex);
+        }
     }
 
     public AuthResponse login(LoginRequest request) {
