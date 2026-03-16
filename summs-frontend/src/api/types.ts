@@ -59,3 +59,9 @@ export interface operations {
         };
     };
 }
+
+export type AuthResponse = {
+    userId: number;
+    email: string;
+    message: string;
+};

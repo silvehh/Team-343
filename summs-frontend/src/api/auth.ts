@@ -1,12 +1,7 @@
 import { API_BASE_URL } from "./config";
+import type { AuthResponse } from "./types";
 
 export type AuthMode = "signin" | "signup";
-
-export type AuthResponse = {
-  userId: number;
-  email: string;
-  message: string;
-};
 
 const getStringField = (value: unknown): string | null => {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
