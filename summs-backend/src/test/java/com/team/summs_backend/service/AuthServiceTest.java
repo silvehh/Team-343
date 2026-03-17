@@ -25,13 +25,18 @@ import com.team.summs_backend.dto.AuthResponse;
 import com.team.summs_backend.dto.LoginRequest;
 import com.team.summs_backend.dto.SignupRequest;
 import com.team.summs_backend.model.AppUser;
+import com.team.summs_backend.model.MobilityProvider;
 import com.team.summs_backend.repository.AppUserRepository;
+import com.team.summs_backend.repository.MobilityProviderRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
     private AppUserRepository appUserRepository;
+
+    @Mock
+    private MobilityProviderRepository mobilityProviderRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -44,20 +49,21 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        signupRequest = new SignupRequest("user@example.com", "12345678", "valid.user", List.of("Scooter", "Bike"));
+        signupRequest = new SignupRequest("user@example.com", "12345678", "valid.user", "provider", List.of("Scooter", "Bike"));
         loginRequest = new LoginRequest("user@example.com", "12345678");
     }
 
     @Test
-    void signupShouldCreateUserWhenEmailIsAvailable() {
-        AppUser savedUser = new AppUser();
-        savedUser.setId(7L);
-        savedUser.setEmail("user@example.com");
-        savedUser.setUsername("valid.user");
+    void signupShouldCreateMobilityProviderWhenEmailIsAvailable() {
+        MobilityProvider savedProvider = new MobilityProvider();
+        savedProvider.setId(7L);
+        savedProvider.setEmail("user@example.com");
+        savedProvider.setUsername("valid.user");
 
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(mobilityProviderRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
-        when(appUserRepository.save(any(AppUser.class))).thenReturn(savedUser);
+        when(mobilityProviderRepository.save(any(MobilityProvider.class))).thenReturn(savedProvider);
 
         AuthResponse response = authService.signup(signupRequest);
 
@@ -65,29 +71,30 @@ class AuthServiceTest {
         assertEquals("user@example.com", response.email());
         assertEquals("valid.user", response.username());
         assertEquals("Signup successful", response.message());
-        verify(appUserRepository).save(argThat(user ->
-            "user@example.com".equals(user.getEmail())
-                && "valid.user".equals(user.getUsername())
-                && "hashed-password".equals(user.getPasswordHash())
-                && "Scooter,Bike".equals(user.getMobilityOptions())
+        verify(mobilityProviderRepository).save(argThat(provider ->
+            "user@example.com".equals(provider.getEmail())
+                && "valid.user".equals(provider.getUsername())
+                && "hashed-password".equals(provider.getPasswordHash())
+                && "Scooter,Bike".equals(provider.getMobilityOptions())
         ));
     }
 
     @Test
-    void signupShouldCreateUserWithNullMobilityOptionsWhenNotProvided() {
-        SignupRequest requestWithoutMobilityOptions = new SignupRequest("user@example.com", "12345678", "valid.user", null);
+    void signupShouldCreateUserWithoutMobilityOptionsWhenSigningUpAsUser() {
+        SignupRequest requestWithoutMobilityOptions = new SignupRequest("user@example.com", "12345678", "valid.user", "user", null);
         AppUser savedUser = new AppUser();
         savedUser.setId(8L);
         savedUser.setEmail("user@example.com");
         savedUser.setUsername("valid.user");
 
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(mobilityProviderRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
         when(appUserRepository.save(any(AppUser.class))).thenReturn(savedUser);
 
         authService.signup(requestWithoutMobilityOptions);
 
-        verify(appUserRepository).save(argThat(user -> user.getMobilityOptions() == null));
+        verify(appUserRepository).save(argThat(user -> user.getEmail().equals("user@example.com") && user.getPasswordHash().equals("hashed-password")));
     }
 
     @Test
@@ -96,6 +103,7 @@ class AuthServiceTest {
             "user@example.com",
             "12345678",
             "valid.user",
+            "provider",
             List.of("Scooter", "Train")
         );
 
@@ -103,6 +111,32 @@ class AuthServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertEquals("Mobility options must only include Scooter, Bike, or Car", ex.getReason());
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenProviderHasNoMobilityOptions() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "valid.user", "provider", List.of());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Select at least one mobility option", ex.getReason());
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenUserIncludesMobilityOptions() {
+        SignupRequest invalidRequest = new SignupRequest(
+            "user@example.com",
+            "12345678",
+            "valid.user",
+            "user",
+            List.of("Scooter")
+        );
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Mobility options are only allowed for mobility providers", ex.getReason());
     }
 
     @Test
@@ -118,8 +152,9 @@ class AuthServiceTest {
     @Test
     void signupShouldThrowConflictWhenDatabaseUniqueConstraintFails() {
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(mobilityProviderRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
-        when(appUserRepository.save(any(AppUser.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
+        when(mobilityProviderRepository.save(any(MobilityProvider.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(signupRequest));
 
@@ -129,7 +164,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsBlank() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ", null);
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ", "user", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -139,7 +174,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameHasInvalidCharacters() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!", null);
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!", "user", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -152,7 +187,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsTooShort() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab", null);
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab", "user", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -165,7 +200,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsTooLong() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu", null);
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu", "user", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -174,6 +209,16 @@ class AuthServiceTest {
             "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
             ex.getReason()
         );
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenAccountTypeIsMissing() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "valid.user", "   ", null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Account type is required", ex.getReason());
     }
 
     @Test
@@ -198,6 +243,7 @@ class AuthServiceTest {
     @Test
     void loginShouldThrowUnauthorizedWhenEmailDoesNotExist() {
         when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.empty());
+        when(mobilityProviderRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.empty());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
 
@@ -219,5 +265,24 @@ class AuthServiceTest {
 
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         assertEquals("Incorrect email or password", ex.getReason());
+    }
+
+    @Test
+    void loginShouldReturnProviderWhenCredentialsAreValid() {
+        MobilityProvider existingProvider = new MobilityProvider();
+        existingProvider.setId(11L);
+        existingProvider.setEmail("user@example.com");
+        existingProvider.setUsername("valid.user");
+        existingProvider.setPasswordHash("stored-hash");
+
+        when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.empty());
+        when(mobilityProviderRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(existingProvider));
+        when(passwordEncoder.matches("12345678", "stored-hash")).thenReturn(true);
+
+        AuthResponse response = authService.login(loginRequest);
+
+        assertEquals(11L, response.userId());
+        assertEquals("user@example.com", response.email());
+        assertEquals("valid.user", response.username());
     }
 }

@@ -31,7 +31,7 @@ class AuthControllerTest {
 
     @Test
     void signupShouldReturnCreatedWhenSignupSucceeds() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", List.of("Scooter"));
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", "provider", List.of("Scooter"));
         AuthResponse serviceResponse = new AuthResponse(10L, "user@example.com", "valid.user", "Signup successful");
 
         when(authService.signup(request)).thenReturn(serviceResponse);
@@ -45,7 +45,7 @@ class AuthControllerTest {
 
     @Test
     void signupShouldReturnConflictWhenEmailAlreadyExists() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", null);
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", "user", null);
 
         when(authService.signup(request))
             .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered"));

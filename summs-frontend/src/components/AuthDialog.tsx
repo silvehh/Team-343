@@ -8,6 +8,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import FormLabel from "@mui/material/FormLabel";
 import Link from "@mui/material/Link";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -28,6 +30,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
   const mobilityOptionChoices = ["Scooter", "Bike", "Car"];
 
   const [authMode, setAuthMode] = React.useState<AuthMode>(initialMode);
+  const [accountType, setAccountType] = React.useState<"user" | "provider">("user");
   const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -42,6 +45,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     }
 
     setAuthMode(initialMode);
+    setAccountType("user");
     setUsername("");
     setEmail("");
     setPassword("");
@@ -86,6 +90,11 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
         setFormError("Passwords do not match.");
         return false;
       }
+
+      if (accountType === "provider" && mobilityOptions.length === 0) {
+        setFormError("Select at least one mobility option.");
+        return false;
+      }
     }
 
     return true;
@@ -102,9 +111,20 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     setIsSubmitting(true);
     try {
       const data = authMode === "signup"
-        ? await submitAuth("signup", { email, password, username: username.trim(), mobilityOptions })
+        ? await submitAuth("signup", {
+          email,
+          password,
+          username: username.trim(),
+          accountType,
+          mobilityOptions: accountType === "provider" ? mobilityOptions : [],
+        })
         : await submitAuth("signin", { email, password });
-      onAuthSuccess(data.username);
+      const authenticatedUsername = data.username?.trim();
+      if (!authenticatedUsername) {
+        throw new Error("The server did not return a username.");
+      }
+
+      onAuthSuccess(authenticatedUsername);
       onClose();
     } catch (error) {
       if (error instanceof Error) {
@@ -127,6 +147,36 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {authMode === "signup" && (
+              <FormControl>
+                <FormLabel
+                  sx={{
+                    color: "text.secondary",
+                    "&.Mui-focused": {
+                      color: "text.secondary",
+                    },
+                  }}
+                >
+                  Sign up as
+                </FormLabel>
+                <RadioGroup
+                  row
+                  name="auth-account-type"
+                  value={accountType}
+                  onChange={(event) => {
+                    const nextAccountType = event.target.value as "user" | "provider";
+                    setAccountType(nextAccountType);
+                    if (nextAccountType === "user") {
+                      setMobilityOptions([]);
+                    }
+                  }}
+                >
+                  <FormControlLabel value="user" control={<Radio />} label="User" />
+                  <FormControlLabel value="provider" control={<Radio />} label="Mobility provider" />
+                </RadioGroup>
+              </FormControl>
+            )}
+
             {authMode === "signup" && (
               <FormControl>
                 <FormLabel htmlFor="auth-username">Username</FormLabel>
@@ -193,7 +243,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
               </FormControl>
             )}
 
-            {authMode === "signup" && (
+            {authMode === "signup" && accountType === "provider" && (
               <FormControl>
                 <FormLabel
                   sx={{

@@ -17,8 +17,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
-public class AppUser {
+@Table(name = "mobility_providers")
+public class MobilityProvider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +32,9 @@ public class AppUser {
 
     @Column(nullable = false)
     private String passwordHash;
+
+    @Column(nullable = false)
+    private String mobilityOptions;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

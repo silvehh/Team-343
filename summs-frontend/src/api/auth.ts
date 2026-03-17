@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "./config";
 import axios, { isAxiosError } from "axios";
-import type { AuthResponse } from "./types";
+import type { components } from "./types";
+
+type AuthResponse = components["schemas"]["AuthResponse"];
 
 export type AuthMode = "signin" | "signup";
 
@@ -11,6 +13,7 @@ type SigninPayload = {
 
 type SignupPayload = SigninPayload & {
   username: string;
+  accountType: "user" | "provider";
   mobilityOptions?: string[];
 };
 
@@ -57,7 +60,8 @@ export async function submitAuth(mode: AuthMode, payload: SigninPayload | Signup
           email: payload.email,
           password: payload.password,
           username: payload.username,
-          mobilityOptions: payload.mobilityOptions ?? [],
+          accountType: payload.accountType,
+          mobilityOptions: payload.accountType === "provider" ? payload.mobilityOptions ?? [] : [],
         }
         : { email: payload.email, password: payload.password };
 

@@ -56,6 +56,7 @@ describe("submitAuth", () => {
         email: "existing@example.com",
         password: "12345678",
         username: "valid.user",
+        accountType: "provider",
         mobilityOptions: ["Scooter", "Bike"],
       }),
     ).rejects.toThrow("Email is already registered");
@@ -66,6 +67,7 @@ describe("submitAuth", () => {
         email: "existing@example.com",
         password: "12345678",
         username: "valid.user",
+        accountType: "provider",
         mobilityOptions: ["Scooter", "Bike"],
       },
     );
@@ -80,6 +82,7 @@ describe("submitAuth", () => {
       email: "new@example.com",
       password: "12345678",
       username: "new.user",
+      accountType: "provider",
       mobilityOptions: ["Car"],
     });
 
@@ -92,12 +95,13 @@ describe("submitAuth", () => {
         email: "new@example.com",
         password: "12345678",
         username: "new.user",
+        accountType: "provider",
         mobilityOptions: ["Car"],
       },
     );
   });
 
-  it("sends empty mobility options array for signup when no options are selected", async () => {
+  it("sends account type for user signup without mobility options", async () => {
     vi.mocked(axios.post).mockResolvedValue({
       data: { userId: 3, email: "new2@example.com", username: "new.user2", message: "Signup successful" },
     } as never);
@@ -106,6 +110,7 @@ describe("submitAuth", () => {
       email: "new2@example.com",
       password: "12345678",
       username: "new.user2",
+      accountType: "user",
     });
 
     expect(axios.post).toHaveBeenCalledWith(
@@ -114,6 +119,7 @@ describe("submitAuth", () => {
         email: "new2@example.com",
         password: "12345678",
         username: "new.user2",
+        accountType: "user",
         mobilityOptions: [],
       },
     );

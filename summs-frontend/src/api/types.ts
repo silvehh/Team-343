@@ -88,6 +88,7 @@ export interface components {
             email?: string;
             password?: string;
             username?: string;
+            accountType?: string;
             mobilityOptions?: string[];
         };
         AuthResponse: {
