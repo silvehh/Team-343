@@ -117,6 +117,32 @@ class AuthServiceTest {
     }
 
     @Test
+    void signupShouldThrowBadRequestWhenUsernameIsTooShort() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(
+            "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
+            ex.getReason()
+        );
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenUsernameIsTooLong() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(
+            "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
+            ex.getReason()
+        );
+    }
+
+    @Test
     void loginShouldReturnUserWhenCredentialsAreValid() {
         AppUser existingUser = new AppUser();
         existingUser.setId(3L);

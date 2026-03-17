@@ -60,4 +60,24 @@ describe("submitAuth", () => {
       { email: "existing@example.com", password: "12345678", username: "valid.user" },
     );
   });
+
+  it("returns signup response including username when request succeeds", async () => {
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { userId: 2, email: "new@example.com", username: "new.user", message: "Signup successful" },
+    } as never);
+
+    const response = await submitAuth("signup", {
+      email: "new@example.com",
+      password: "12345678",
+      username: "new.user",
+    });
+
+    expect(response.email).toBe("new@example.com");
+    expect(response.username).toBe("new.user");
+    expect(response.message).toBe("Signup successful");
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/signup"),
+      { email: "new@example.com", password: "12345678", username: "new.user" },
+    );
+  });
 });
