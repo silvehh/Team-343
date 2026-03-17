@@ -17,6 +17,7 @@ import Sitemark from "./SitemarkIcon";
 import AuthDialog from "./AuthDialog";
 import { type AuthMode } from "../api/auth";
 
+const AUTH_USERNAME_KEY = "summs.auth.username";
 const AUTH_EMAIL_KEY = "summs.auth.email";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
@@ -39,8 +40,8 @@ export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
   const [authMode, setAuthMode] = React.useState<AuthMode>("signin");
-  const [currentUserEmail, setCurrentUserEmail] = React.useState(
-    () => localStorage.getItem(AUTH_EMAIL_KEY) ?? "",
+  const [currentUsername, setCurrentUsername] = React.useState(
+    () => localStorage.getItem(AUTH_USERNAME_KEY) ?? localStorage.getItem(AUTH_EMAIL_KEY) ?? "",
   );
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -57,13 +58,15 @@ export default function AppAppBar() {
   };
 
   const handleLogout = () => {
-    setCurrentUserEmail("");
+    setCurrentUsername("");
+    localStorage.removeItem(AUTH_USERNAME_KEY);
     localStorage.removeItem(AUTH_EMAIL_KEY);
   };
 
-  const handleAuthSuccess = (email: string) => {
-    setCurrentUserEmail(email);
-    localStorage.setItem(AUTH_EMAIL_KEY, email);
+  const handleAuthSuccess = (username: string) => {
+    setCurrentUsername(username);
+    localStorage.setItem(AUTH_USERNAME_KEY, username);
+    localStorage.removeItem(AUTH_EMAIL_KEY);
   };
 
   return (
@@ -121,10 +124,10 @@ export default function AppAppBar() {
               alignItems: "center",
             }}
           >
-            {currentUserEmail ? (
+            {currentUsername ? (
               <>
                 <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
-                  {currentUserEmail}
+                  {currentUsername}
                 </Typography>
                 <Button color="primary" variant="outlined" size="small" onClick={handleLogout}>
                   Log out
@@ -177,7 +180,7 @@ export default function AppAppBar() {
                 <MenuItem>Blog</MenuItem>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
-                  {currentUserEmail ? (
+                  {currentUsername ? (
                     <Button color="primary" variant="outlined" fullWidth onClick={handleLogout}>
                       Log out
                     </Button>
@@ -196,7 +199,7 @@ export default function AppAppBar() {
                   )}
                 </MenuItem>
                 <MenuItem>
-                  {!currentUserEmail && (
+                  {!currentUsername && (
                     <Button
                       color="primary"
                       variant="outlined"

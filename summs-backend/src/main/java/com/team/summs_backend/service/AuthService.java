@@ -1,6 +1,7 @@
 package com.team.summs_backend.service;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,8 @@ import com.team.summs_backend.repository.AppUserRepository;
 @Service
 public class AuthService {
 
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("[A-Za-z0-9._-]{3,20}");
+
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -27,6 +30,7 @@ public class AuthService {
 
     public AuthResponse signup(SignupRequest request) {
         String email = normalizeAndValidateEmail(request.email());
+        String username = normalizeAndValidateUsername(request.username());
         validatePassword(request.password());
 
         if (appUserRepository.existsByEmailIgnoreCase(email)) {
@@ -35,11 +39,12 @@ public class AuthService {
 
         AppUser appUser = new AppUser();
         appUser.setEmail(email);
+        appUser.setUsername(username);
         appUser.setPasswordHash(passwordEncoder.encode(request.password()));
 
         try {
             AppUser saved = appUserRepository.save(appUser);
-            return new AuthResponse(saved.getId(), saved.getEmail(), "Signup successful");
+            return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "Signup successful");
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered", ex);
         }
@@ -55,7 +60,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password");
         }
 
-        return new AuthResponse(appUser.getId(), appUser.getEmail(), "Login successful");
+        return new AuthResponse(appUser.getId(), appUser.getEmail(), appUser.getUsername(), "Login successful");
     }
 
     private static String normalizeAndValidateEmail(String rawEmail) {
@@ -68,6 +73,22 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a valid email address");
         }
         return email;
+    }
+
+    private static String normalizeAndValidateUsername(String rawUsername) {
+        if (rawUsername == null || rawUsername.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+        }
+
+        String username = rawUsername.trim();
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens"
+            );
+        }
+
+        return username;
     }
 
     private static void validatePassword(String password) {

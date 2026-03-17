@@ -18,11 +18,12 @@ type AuthDialogProps = {
   open: boolean;
   initialMode: AuthMode;
   onClose: () => void;
-  onAuthSuccess: (email: string) => void;
+  onAuthSuccess: (username: string) => void;
 };
 
 export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }: AuthDialogProps) {
   const [authMode, setAuthMode] = React.useState<AuthMode>(initialMode);
+  const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -35,6 +36,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     }
 
     setAuthMode(initialMode);
+    setUsername("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -42,7 +44,21 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     setIsSubmitting(false);
   }, [open, initialMode]);
 
+  const usernamePattern = /^[A-Za-z0-9._-]{3,20}$/;
+
   const validateInputs = () => {
+    if (authMode === "signup") {
+      if (!username.trim()) {
+        setFormError("Username is required.");
+        return false;
+      }
+
+      if (!usernamePattern.test(username.trim())) {
+        setFormError("Username must be 3 to 20 characters and use only letters, numbers, periods, underscores, or hyphens.");
+        return false;
+      }
+    }
+
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setFormError("Please enter a valid email address.");
       return false;
@@ -78,8 +94,10 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
 
     setIsSubmitting(true);
     try {
-      const data = await submitAuth(authMode, email, password);
-      onAuthSuccess(data.email);
+      const data = authMode === "signup"
+        ? await submitAuth("signup", { email, password, username: username.trim() })
+        : await submitAuth("signin", { email, password });
+      onAuthSuccess(data.username);
       onClose();
     } catch (error) {
       if (error instanceof Error) {
@@ -102,6 +120,24 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {authMode === "signup" && (
+              <FormControl>
+                <FormLabel htmlFor="auth-username">Username</FormLabel>
+                <TextField
+                  id="auth-username"
+                  name="username"
+                  type="text"
+                  placeholder="username"
+                  autoComplete="username"
+                  autoFocus
+                  required
+                  fullWidth
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                />
+              </FormControl>
+            )}
+
             <FormControl>
               <FormLabel htmlFor="auth-email">Email</FormLabel>
               <TextField
@@ -110,7 +146,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
                 type="email"
                 placeholder="your@email.com"
                 autoComplete="email"
-                autoFocus
+                autoFocus={authMode === "signin"}
                 required
                 fullWidth
                 value={email}

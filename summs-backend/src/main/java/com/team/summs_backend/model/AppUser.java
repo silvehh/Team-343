@@ -28,6 +28,9 @@ public class AppUser {
     private String email;
 
     @Column(nullable = false)
+    private String username;
+
+    @Column(nullable = false)
     private String passwordHash;
 
     @Column(nullable = false)

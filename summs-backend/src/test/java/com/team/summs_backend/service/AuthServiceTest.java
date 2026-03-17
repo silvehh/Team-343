@@ -2,6 +2,7 @@ package com.team.summs_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,7 +43,7 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        signupRequest = new SignupRequest("user@example.com", "12345678");
+        signupRequest = new SignupRequest("user@example.com", "12345678", "valid.user");
         loginRequest = new LoginRequest("user@example.com", "12345678");
     }
 
@@ -51,6 +52,7 @@ class AuthServiceTest {
         AppUser savedUser = new AppUser();
         savedUser.setId(7L);
         savedUser.setEmail("user@example.com");
+        savedUser.setUsername("valid.user");
 
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
@@ -60,8 +62,13 @@ class AuthServiceTest {
 
         assertEquals(7L, response.userId());
         assertEquals("user@example.com", response.email());
+        assertEquals("valid.user", response.username());
         assertEquals("Signup successful", response.message());
-        verify(appUserRepository).save(any(AppUser.class));
+        verify(appUserRepository).save(argThat(user ->
+            "user@example.com".equals(user.getEmail())
+                && "valid.user".equals(user.getUsername())
+                && "hashed-password".equals(user.getPasswordHash())
+        ));
     }
 
     @Test
@@ -87,10 +94,34 @@ class AuthServiceTest {
     }
 
     @Test
+    void signupShouldThrowBadRequestWhenUsernameIsBlank() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Username is required", ex.getReason());
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenUsernameHasInvalidCharacters() {
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(
+            "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
+            ex.getReason()
+        );
+    }
+
+    @Test
     void loginShouldReturnUserWhenCredentialsAreValid() {
         AppUser existingUser = new AppUser();
         existingUser.setId(3L);
         existingUser.setEmail("user@example.com");
+        existingUser.setUsername("valid.user");
         existingUser.setPasswordHash("stored-hash");
 
         when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(existingUser));
@@ -100,6 +131,7 @@ class AuthServiceTest {
 
         assertEquals(3L, response.userId());
         assertEquals("user@example.com", response.email());
+        assertEquals("valid.user", response.username());
         assertEquals("Login successful", response.message());
     }
 
@@ -117,6 +149,7 @@ class AuthServiceTest {
     void loginShouldThrowUnauthorizedWhenPasswordIsWrong() {
         AppUser existingUser = new AppUser();
         existingUser.setEmail("user@example.com");
+        existingUser.setUsername("valid.user");
         existingUser.setPasswordHash("stored-hash");
 
         when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(existingUser));

@@ -63,5 +63,6 @@ export interface operations {
 export type AuthResponse = {
     userId: number;
     email: string;
+    username: string;
     message: string;
 };

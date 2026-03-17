@@ -29,20 +29,21 @@ class AuthControllerTest {
 
     @Test
     void signupShouldReturnCreatedWhenSignupSucceeds() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678");
-        AuthResponse serviceResponse = new AuthResponse(10L, "user@example.com", "Signup successful");
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user");
+        AuthResponse serviceResponse = new AuthResponse(10L, "user@example.com", "valid.user", "Signup successful");
 
         when(authService.signup(request)).thenReturn(serviceResponse);
 
         ResponseEntity<AuthResponse> response = authController.signup(request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("valid.user", response.getBody().username());
         assertEquals("Signup successful", response.getBody().message());
     }
 
     @Test
     void signupShouldReturnConflictWhenEmailAlreadyExists() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678");
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user");
 
         when(authService.signup(request))
             .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered"));
@@ -69,13 +70,14 @@ class AuthControllerTest {
     @Test
     void loginShouldReturnOkWhenCredentialsAreValid() {
         LoginRequest request = new LoginRequest("user@example.com", "12345678");
-        AuthResponse serviceResponse = new AuthResponse(4L, "user@example.com", "Login successful");
+        AuthResponse serviceResponse = new AuthResponse(4L, "user@example.com", "valid.user", "Login successful");
 
         when(authService.login(request)).thenReturn(serviceResponse);
 
         ResponseEntity<AuthResponse> response = authController.login(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("valid.user", response.getBody().username());
         assertEquals("Login successful", response.getBody().message());
     }
 }

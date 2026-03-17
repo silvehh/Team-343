@@ -4,6 +4,15 @@ import type { AuthResponse } from "./types";
 
 export type AuthMode = "signin" | "signup";
 
+type SigninPayload = {
+  email: string;
+  password: string;
+};
+
+type SignupPayload = SigninPayload & {
+  username: string;
+};
+
 const getStringField = (value: unknown): string | null => {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 };
@@ -37,15 +46,22 @@ const parseErrorMessage = (error: unknown) => {
   return "Could not reach the server. Make sure the backend is running.";
 };
 
-export const submitAuth = async (mode: AuthMode, email: string, password: string): Promise<AuthResponse> => {
+export function submitAuth(mode: "signin", payload: SigninPayload): Promise<AuthResponse>;
+export function submitAuth(mode: "signup", payload: SignupPayload): Promise<AuthResponse>;
+export async function submitAuth(mode: AuthMode, payload: SigninPayload | SignupPayload): Promise<AuthResponse> {
   try {
+    const requestBody =
+      mode === "signup" && "username" in payload
+        ? { email: payload.email, password: payload.password, username: payload.username }
+        : { email: payload.email, password: payload.password };
+
     const response = await axios.post<AuthResponse>(
       `${API_BASE_URL}/api/auth/${mode === "signin" ? "login" : "signup"}`,
-      { email, password },
+      requestBody,
     );
 
     return response.data;
   } catch (error) {
     throw new Error(parseErrorMessage(error));
   }
-};
+}

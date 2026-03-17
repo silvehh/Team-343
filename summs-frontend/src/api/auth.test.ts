@@ -16,13 +16,18 @@ describe("submitAuth", () => {
 
   it("returns auth response when request succeeds", async () => {
     vi.mocked(axios.post).mockResolvedValue({
-      data: { userId: 1, email: "user@example.com", message: "Login successful" },
+      data: { userId: 1, email: "user@example.com", username: "valid.user", message: "Login successful" },
     } as never);
 
-    const response = await submitAuth("signin", "user@example.com", "12345678");
+    const response = await submitAuth("signin", { email: "user@example.com", password: "12345678" });
 
     expect(response.email).toBe("user@example.com");
+    expect(response.username).toBe("valid.user");
     expect(response.message).toBe("Login successful");
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/login"),
+      { email: "user@example.com", password: "12345678" },
+    );
   });
 
   it("returns backend signin error message", async () => {
@@ -34,10 +39,10 @@ describe("submitAuth", () => {
       },
     });
 
-    await expect(submitAuth("signin", "user@example.com", "wrong-pass")).rejects.toThrow("Invalid email or password");
+    await expect(submitAuth("signin", { email: "user@example.com", password: "wrong-pass" })).rejects.toThrow("Invalid email or password");
   });
 
-  it("returns backend signup error message", async () => {
+  it("posts username for signup and returns backend signup error message", async () => {
     vi.mocked(axios.post).mockRejectedValue({
       isAxiosError: true,
       response: {
@@ -46,6 +51,13 @@ describe("submitAuth", () => {
       },
     });
 
-    await expect(submitAuth("signup", "existing@example.com", "12345678")).rejects.toThrow("Email is already registered");
+    await expect(
+      submitAuth("signup", { email: "existing@example.com", password: "12345678", username: "valid.user" }),
+    ).rejects.toThrow("Email is already registered");
+
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/signup"),
+      { email: "existing@example.com", password: "12345678", username: "valid.user" },
+    );
   });
 });
