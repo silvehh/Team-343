@@ -4,14 +4,62 @@
  */
 
 export interface paths {
-    "/sample": {
+    "/api/sample": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getSample"];
+        get?: never;
+        put?: never;
+        post: operations["createSample"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sample/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSampleById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -29,6 +77,30 @@ export interface components {
             myLong?: number;
             myString?: string;
         };
+        Sample: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            myLong?: number;
+            myString?: string;
+        };
+        SignupRequest: {
+            email?: string;
+            password?: string;
+            username?: string;
+            mobilityOptions?: string[];
+        };
+        AuthResponse: {
+            /** Format: int64 */
+            userId?: number;
+            email?: string;
+            username?: string;
+            message?: string;
+        };
+        LoginRequest: {
+            email?: string;
+            password?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -38,11 +110,85 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getSample: {
+    createSample: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SampleDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Sample"];
+                };
+            };
+        };
+    };
+    signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthResponse"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthResponse"];
+                };
+            };
+        };
+    };
+    getSampleById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -53,16 +199,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["SampleDTO"];
+                    "*/*": components["schemas"]["Sample"];
                 };
             };
         };
     };
 }
-
-export type AuthResponse = {
-    userId: number;
-    email: string;
-    username: string;
-    message: string;
-};
