@@ -1,6 +1,9 @@
 package com.team.summs_backend.service;
 
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +22,7 @@ import com.team.summs_backend.repository.AppUserRepository;
 public class AuthService {
 
     private static final Pattern USERNAME_PATTERN = Pattern.compile("[A-Za-z0-9._-]{3,20}");
+    private static final Set<String> ALLOWED_MOBILITY_OPTIONS = Set.of("Scooter", "Bike", "Car");
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -41,6 +45,7 @@ public class AuthService {
         appUser.setEmail(email);
         appUser.setUsername(username);
         appUser.setPasswordHash(passwordEncoder.encode(request.password()));
+        appUser.setMobilityOptions(normalizeAndValidateMobilityOptions(request.mobilityOptions()));
 
         try {
             AppUser saved = appUserRepository.save(appUser);
@@ -99,5 +104,37 @@ public class AuthService {
         if (password.length() < 8) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long");
         }
+    }
+
+    private static String normalizeAndValidateMobilityOptions(List<String> rawMobilityOptions) {
+        if (rawMobilityOptions == null || rawMobilityOptions.isEmpty()) {
+            return null;
+        }
+
+        LinkedHashSet<String> normalizedOptions = new LinkedHashSet<>();
+        for (String rawOption : rawMobilityOptions) {
+            if (rawOption == null) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mobility options must only include Scooter, Bike, or Car"
+                );
+            }
+
+            String option = rawOption.trim();
+            if (!ALLOWED_MOBILITY_OPTIONS.contains(option)) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mobility options must only include Scooter, Bike, or Car"
+                );
+            }
+
+            normalizedOptions.add(option);
+        }
+
+        if (normalizedOptions.isEmpty()) {
+            return null;
+        }
+
+        return String.join(",", normalizedOptions);
     }
 }

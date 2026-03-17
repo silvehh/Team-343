@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +44,7 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        signupRequest = new SignupRequest("user@example.com", "12345678", "valid.user");
+        signupRequest = new SignupRequest("user@example.com", "12345678", "valid.user", List.of("Scooter", "Bike"));
         loginRequest = new LoginRequest("user@example.com", "12345678");
     }
 
@@ -68,7 +69,40 @@ class AuthServiceTest {
             "user@example.com".equals(user.getEmail())
                 && "valid.user".equals(user.getUsername())
                 && "hashed-password".equals(user.getPasswordHash())
+                && "Scooter,Bike".equals(user.getMobilityOptions())
         ));
+    }
+
+    @Test
+    void signupShouldCreateUserWithNullMobilityOptionsWhenNotProvided() {
+        SignupRequest requestWithoutMobilityOptions = new SignupRequest("user@example.com", "12345678", "valid.user", null);
+        AppUser savedUser = new AppUser();
+        savedUser.setId(8L);
+        savedUser.setEmail("user@example.com");
+        savedUser.setUsername("valid.user");
+
+        when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
+        when(appUserRepository.save(any(AppUser.class))).thenReturn(savedUser);
+
+        authService.signup(requestWithoutMobilityOptions);
+
+        verify(appUserRepository).save(argThat(user -> user.getMobilityOptions() == null));
+    }
+
+    @Test
+    void signupShouldThrowBadRequestWhenMobilityOptionsContainInvalidValue() {
+        SignupRequest invalidRequest = new SignupRequest(
+            "user@example.com",
+            "12345678",
+            "valid.user",
+            List.of("Scooter", "Train")
+        );
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Mobility options must only include Scooter, Bike, or Car", ex.getReason());
     }
 
     @Test
@@ -95,7 +129,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsBlank() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ");
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -105,7 +139,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameHasInvalidCharacters() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!");
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -118,7 +152,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsTooShort() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab");
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 
@@ -131,7 +165,7 @@ class AuthServiceTest {
 
     @Test
     void signupShouldThrowBadRequestWhenUsernameIsTooLong() {
-        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu");
+        SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu", null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
 

@@ -2,7 +2,10 @@ import * as React from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
 import FormLabel from "@mui/material/FormLabel";
 import Link from "@mui/material/Link";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -22,11 +25,14 @@ type AuthDialogProps = {
 };
 
 export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }: AuthDialogProps) {
+  const mobilityOptionChoices = ["Scooter", "Bike", "Car"];
+
   const [authMode, setAuthMode] = React.useState<AuthMode>(initialMode);
   const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [mobilityOptions, setMobilityOptions] = React.useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formError, setFormError] = React.useState("");
 
@@ -40,6 +46,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setMobilityOptions([]);
     setFormError("");
     setIsSubmitting(false);
   }, [open, initialMode]);
@@ -95,7 +102,7 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
     setIsSubmitting(true);
     try {
       const data = authMode === "signup"
-        ? await submitAuth("signup", { email, password, username: username.trim() })
+        ? await submitAuth("signup", { email, password, username: username.trim(), mobilityOptions })
         : await submitAuth("signin", { email, password });
       onAuthSuccess(data.username);
       onClose();
@@ -183,6 +190,46 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                 />
+              </FormControl>
+            )}
+
+            {authMode === "signup" && (
+              <FormControl>
+                <FormLabel
+                  sx={{
+                    color: "text.secondary",
+                    "&.Mui-focused": {
+                      color: "text.secondary",
+                    },
+                  }}
+                >
+                  which mobility options will you provide?
+                </FormLabel>
+                <FormGroup>
+                  {mobilityOptionChoices.map((option) => {
+                    const checked = mobilityOptions.includes(option);
+
+                    return (
+                      <FormControlLabel
+                        key={option}
+                        control={(
+                          <Checkbox
+                            checked={checked}
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                setMobilityOptions((previous) => [...previous, option]);
+                                return;
+                              }
+
+                              setMobilityOptions((previous) => previous.filter((item) => item !== option));
+                            }}
+                          />
+                        )}
+                        label={option}
+                      />
+                    );
+                  })}
+                </FormGroup>
               </FormControl>
             )}
           </Box>

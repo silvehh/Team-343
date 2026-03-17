@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,7 +31,7 @@ class AuthControllerTest {
 
     @Test
     void signupShouldReturnCreatedWhenSignupSucceeds() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user");
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", List.of("Scooter"));
         AuthResponse serviceResponse = new AuthResponse(10L, "user@example.com", "valid.user", "Signup successful");
 
         when(authService.signup(request)).thenReturn(serviceResponse);
@@ -43,7 +45,7 @@ class AuthControllerTest {
 
     @Test
     void signupShouldReturnConflictWhenEmailAlreadyExists() {
-        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user");
+        SignupRequest request = new SignupRequest("user@example.com", "12345678", "valid.user", null);
 
         when(authService.signup(request))
             .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered"));

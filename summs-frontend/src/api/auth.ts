@@ -11,6 +11,7 @@ type SigninPayload = {
 
 type SignupPayload = SigninPayload & {
   username: string;
+  mobilityOptions?: string[];
 };
 
 const getStringField = (value: unknown): string | null => {
@@ -52,7 +53,12 @@ export async function submitAuth(mode: AuthMode, payload: SigninPayload | Signup
   try {
     const requestBody =
       mode === "signup" && "username" in payload
-        ? { email: payload.email, password: payload.password, username: payload.username }
+        ? {
+          email: payload.email,
+          password: payload.password,
+          username: payload.username,
+          mobilityOptions: payload.mobilityOptions ?? [],
+        }
         : { email: payload.email, password: payload.password };
 
     const response = await axios.post<AuthResponse>(

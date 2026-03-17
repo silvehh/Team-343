@@ -52,12 +52,22 @@ describe("submitAuth", () => {
     });
 
     await expect(
-      submitAuth("signup", { email: "existing@example.com", password: "12345678", username: "valid.user" }),
+      submitAuth("signup", {
+        email: "existing@example.com",
+        password: "12345678",
+        username: "valid.user",
+        mobilityOptions: ["Scooter", "Bike"],
+      }),
     ).rejects.toThrow("Email is already registered");
 
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining("/api/auth/signup"),
-      { email: "existing@example.com", password: "12345678", username: "valid.user" },
+      {
+        email: "existing@example.com",
+        password: "12345678",
+        username: "valid.user",
+        mobilityOptions: ["Scooter", "Bike"],
+      },
     );
   });
 
@@ -70,6 +80,7 @@ describe("submitAuth", () => {
       email: "new@example.com",
       password: "12345678",
       username: "new.user",
+      mobilityOptions: ["Car"],
     });
 
     expect(response.email).toBe("new@example.com");
@@ -77,7 +88,34 @@ describe("submitAuth", () => {
     expect(response.message).toBe("Signup successful");
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining("/api/auth/signup"),
-      { email: "new@example.com", password: "12345678", username: "new.user" },
+      {
+        email: "new@example.com",
+        password: "12345678",
+        username: "new.user",
+        mobilityOptions: ["Car"],
+      },
+    );
+  });
+
+  it("sends empty mobility options array for signup when no options are selected", async () => {
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { userId: 3, email: "new2@example.com", username: "new.user2", message: "Signup successful" },
+    } as never);
+
+    await submitAuth("signup", {
+      email: "new2@example.com",
+      password: "12345678",
+      username: "new.user2",
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/signup"),
+      {
+        email: "new2@example.com",
+        password: "12345678",
+        username: "new.user2",
+        mobilityOptions: [],
+      },
     );
   });
 });

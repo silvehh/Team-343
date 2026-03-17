@@ -33,6 +33,9 @@ public class AppUser {
     @Column(nullable = false)
     private String passwordHash;
 
+    @Column
+    private String mobilityOptions;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
