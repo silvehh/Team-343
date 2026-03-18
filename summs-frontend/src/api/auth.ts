@@ -1,6 +1,7 @@
 import createClient from "openapi-fetch";
 import type { paths, components } from "./types";
 import { API_BASE_URL } from "./config";
+import { handleApiError } from "./api_error";
 
 type AuthResponse = components["schemas"]["AuthResponse"];
 type LoginRequest = components["schemas"]["LoginRequest"];
@@ -11,11 +12,6 @@ export type AuthMode = "signin" | "signup";
 const client = createClient<paths>({
   baseUrl: API_BASE_URL,
 });
-
-const parseErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-  return "Could not reach the server. Make sure the backend is running.";
-};
 
 export function submitAuth(
   mode: "signin",
@@ -31,23 +27,20 @@ export async function submitAuth(
   mode: AuthMode,
   payload: LoginRequest | SignupRequest,
 ): Promise<AuthResponse> {
-  try {
-    if (mode === "signin") {
-      const { data, error } = await client.POST("/api/auth/login", {
-        body: payload as LoginRequest,
-      });
-
-      if (error) throw error;
-      return data as AuthResponse;
-    }
-
-    const { data, error } = await client.POST("/api/auth/signup", {
-      body: payload as SignupRequest,
+  if (mode === "signin") {
+    const { data, error } = await client.POST("/api/auth/login", {
+      body: payload as LoginRequest,
     });
 
-    if (error) throw error;
+    console.log(error);
+    if (error) handleApiError(error);
     return data as AuthResponse;
-  } catch (error) {
-    throw new Error(parseErrorMessage(error));
   }
+
+  const { data, error } = await client.POST("/api/auth/signup", {
+    body: payload as SignupRequest,
+  });
+
+  if (error) handleApiError(error);
+  return data as AuthResponse;
 }

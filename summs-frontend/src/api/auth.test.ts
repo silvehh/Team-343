@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { handleApiError } from "./api_error";
 
 const { postMock } = vi.hoisted(() => ({
   postMock: vi.fn(),
@@ -10,12 +11,22 @@ vi.mock("openapi-fetch", () => ({
   })),
 }));
 
+vi.mock("./api_error");
+
 import { submitAuth } from "./auth";
 
 describe("submitAuth", () => {
   afterEach(() => {
     postMock.mockReset();
     vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    vi.mocked(handleApiError).mockImplementation((error: unknown) => {
+      const errorMessage =
+        (error as { message?: string }).message || "An error occurred";
+      throw new Error(errorMessage);
+    });
   });
 
   it("returns auth response when request succeeds", async () => {
@@ -45,7 +56,7 @@ describe("submitAuth", () => {
   it("returns backend signin error message", async () => {
     postMock.mockResolvedValue({
       data: undefined,
-      error: new Error("Invalid email or password"),
+      error: { message: "Invalid email or password" },
     });
 
     await expect(
@@ -59,7 +70,7 @@ describe("submitAuth", () => {
   it("posts username for signup and returns backend signup error message", async () => {
     postMock.mockResolvedValue({
       data: undefined,
-      error: new Error("Email is already registered"),
+      error: { message: "Email is already registered" },
     });
 
     await expect(
@@ -144,7 +155,7 @@ describe("submitAuth", () => {
     });
   });
 
-  it("returns fallback message for non-Error failures", async () => {
+  it("uses error message from API response", async () => {
     postMock.mockResolvedValue({
       data: undefined,
       error: { message: "Backend says no" },
@@ -152,8 +163,6 @@ describe("submitAuth", () => {
 
     await expect(
       submitAuth("signin", { email: "user@example.com", password: "12345678" }),
-    ).rejects.toThrow(
-      "Could not reach the server. Make sure the backend is running.",
-    );
+    ).rejects.toThrow("Backend says no");
   });
 });
