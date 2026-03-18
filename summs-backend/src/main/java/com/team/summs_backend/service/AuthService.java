@@ -7,14 +7,15 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.team.summs_backend.dto.AuthResponse;
 import com.team.summs_backend.dto.LoginRequest;
 import com.team.summs_backend.dto.SignupRequest;
+import com.team.summs_backend.exception.EmailAlreadyRegisteredException;
+import com.team.summs_backend.exception.InvalidCredentialsException;
+import com.team.summs_backend.exception.InvalidInputException;
 import com.team.summs_backend.model.AccountType;
 import com.team.summs_backend.model.AppUser;
 import com.team.summs_backend.model.MobilityProvider;
@@ -48,7 +49,7 @@ public class AuthService {
         validatePassword(request.password());
 
         if (emailExists(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
+            throw new EmailAlreadyRegisteredException("Email is already registered");
         }
 
         String passwordHash = passwordEncoder.encode(request.password());
@@ -59,7 +60,7 @@ public class AuthService {
                 case MOBILITY_PROVIDER -> signupMobilityProvider(email, username, passwordHash, request.mobilityOptions());
             };
         } catch (DataIntegrityViolationException ex) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered", ex);
+            throw new EmailAlreadyRegisteredException("Email is already registered", ex);
         }
     }
 
@@ -73,7 +74,7 @@ public class AuthService {
         }
 
         MobilityProvider mobilityProvider = mobilityProviderRepository.findByEmailIgnoreCase(email)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password"));
+            .orElseThrow(() -> new InvalidCredentialsException("Incorrect email or password"));
 
         validatePasswordMatch(request.password(), mobilityProvider.getPasswordHash());
 
@@ -87,7 +88,7 @@ public class AuthService {
 
     private AuthResponse signupUser(String email, String username, String passwordHash, List<String> rawMobilityOptions) {
         if (rawMobilityOptions != null && !rawMobilityOptions.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mobility options are only allowed for mobility providers");
+            throw new InvalidInputException("Mobility options are only allowed for mobility providers");
         }
 
         AppUser appUser = new AppUser();
@@ -121,31 +122,30 @@ public class AuthService {
 
     private void validatePasswordMatch(String rawPassword, String storedPasswordHash) {
         if (!passwordEncoder.matches(rawPassword, storedPasswordHash)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect email or password");
+            throw new InvalidCredentialsException("Incorrect email or password");
         }
     }
 
     private static String normalizeAndValidateEmail(String rawEmail) {
         if (rawEmail == null || rawEmail.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
+            throw new InvalidInputException("Email is required");
         }
 
         String email = rawEmail.trim().toLowerCase(Locale.ROOT);
         if (!email.contains("@") || email.length() < 5) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a valid email address");
+            throw new InvalidInputException("Enter a valid email address");
         }
         return email;
     }
 
     private static String normalizeAndValidateUsername(String rawUsername) {
         if (rawUsername == null || rawUsername.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+            throw new InvalidInputException("Username is required");
         }
 
         String username = rawUsername.trim();
         if (!USERNAME_PATTERN.matcher(username).matches()) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
+            throw new InvalidInputException(
                 "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens"
             );
         }
@@ -155,45 +155,43 @@ public class AuthService {
 
     private static void validatePassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+            throw new InvalidInputException("Password is required");
         }
 
         if (password.length() < 8) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long");
+            throw new InvalidInputException("Password must be at least 8 characters long");
         }
     }
 
     private static AccountType normalizeAndValidateAccountType(String rawAccountType) {
         if (rawAccountType == null || rawAccountType.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account type is required");
+            throw new InvalidInputException("Account type is required");
         }
 
         String accountType = rawAccountType.trim().toLowerCase(Locale.ROOT);
         return switch (accountType) {
             case "user" -> AccountType.USER;
             case "provider" -> AccountType.MOBILITY_PROVIDER;
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account type must be user or provider");
+            default -> throw new InvalidInputException("Account type must be user or provider");
         };
     }
 
     private static String normalizeAndValidateMobilityOptions(List<String> rawMobilityOptions) {
         if (rawMobilityOptions == null || rawMobilityOptions.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select at least one mobility option");
+            throw new InvalidInputException("Select at least one mobility option");
         }
 
         LinkedHashSet<String> normalizedOptions = new LinkedHashSet<>();
         for (String rawOption : rawMobilityOptions) {
             if (rawOption == null) {
-                throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+                throw new InvalidInputException(
                     "Mobility options must only include Scooter, Bike, or Car"
                 );
             }
 
             String option = rawOption.trim();
             if (!ALLOWED_MOBILITY_OPTIONS.contains(option)) {
-                throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+                throw new InvalidInputException(
                     "Mobility options must only include Scooter, Bike, or Car"
                 );
             }
