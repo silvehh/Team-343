@@ -13,6 +13,8 @@ SUPABASE_DB_PASS=YOUR_PASSWORD
 
 ## Run
 
+Open terminal in /summs-backend
+
 ### Linux
 
 To start the server execute `./mvnw spring-boot:run`
