@@ -1,76 +1,52 @@
+import createClient from "openapi-fetch";
+import type { paths, components } from "./types";
 import { API_BASE_URL } from "./config";
-import axios, { isAxiosError } from "axios";
-import type { components } from "./types";
 
 type AuthResponse = components["schemas"]["AuthResponse"];
+type LoginRequest = components["schemas"]["LoginRequest"];
+type SignupRequest = components["schemas"]["SignupRequest"];
 
 export type AuthMode = "signin" | "signup";
 
-type SigninPayload = {
-  email: string;
-  password: string;
-};
-
-type SignupPayload = SigninPayload & {
-  username: string;
-  accountType: "user" | "provider";
-  mobilityOptions?: string[];
-};
-
-const getStringField = (value: unknown): string | null => {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
-};
+const client = createClient<paths>({
+  baseUrl: API_BASE_URL,
+});
 
 const parseErrorMessage = (error: unknown) => {
-  if (isAxiosError(error)) {
-    const data = error.response?.data;
-
-    if (data && typeof data === "object") {
-      const record = data as Record<string, unknown>;
-      const message =
-        getStringField(record.message) ??
-        getStringField(record.detail) ??
-        getStringField(record.error) ??
-        getStringField(record.title);
-
-      if (message) {
-        return message;
-      }
-    }
-
-    if (typeof data === "string" && data.trim().length > 0) {
-      return data;
-    }
-
-    if (error.response?.status) {
-      return `Request failed (${error.response.status}). Please try again.`;
-    }
-  }
-
+  if (error instanceof Error) return error.message;
   return "Could not reach the server. Make sure the backend is running.";
 };
 
-export function submitAuth(mode: "signin", payload: SigninPayload): Promise<AuthResponse>;
-export function submitAuth(mode: "signup", payload: SignupPayload): Promise<AuthResponse>;
-export async function submitAuth(mode: AuthMode, payload: SigninPayload | SignupPayload): Promise<AuthResponse> {
+export function submitAuth(
+  mode: "signin",
+  payload: LoginRequest,
+): Promise<AuthResponse>;
+
+export function submitAuth(
+  mode: "signup",
+  payload: SignupRequest,
+): Promise<AuthResponse>;
+
+export async function submitAuth(
+  mode: AuthMode,
+  payload: LoginRequest | SignupRequest,
+): Promise<AuthResponse> {
   try {
-    const requestBody =
-      mode === "signup" && "username" in payload
-        ? {
-          email: payload.email,
-          password: payload.password,
-          username: payload.username,
-          accountType: payload.accountType,
-          mobilityOptions: payload.accountType === "provider" ? payload.mobilityOptions ?? [] : [],
-        }
-        : { email: payload.email, password: payload.password };
+    if (mode === "signin") {
+      const { data, error } = await client.POST("/api/auth/login", {
+        body: payload as LoginRequest,
+      });
 
-    const response = await axios.post<AuthResponse>(
-      `${API_BASE_URL}/api/auth/${mode === "signin" ? "login" : "signup"}`,
-      requestBody,
-    );
+      if (error) throw error;
+      return data as AuthResponse;
+    }
 
-    return response.data;
+    const { data, error } = await client.POST("/api/auth/signup", {
+      body: payload as SignupRequest,
+    });
+
+    if (error) throw error;
+    return data as AuthResponse;
   } catch (error) {
     throw new Error(parseErrorMessage(error));
   }

@@ -1,54 +1,65 @@
-import axios from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { submitAuth } from "./auth";
 
-vi.mock("axios", () => ({
-  default: {
-    post: vi.fn(),
-  },
-  isAxiosError: (error: unknown) => Boolean(error && typeof error === "object" && "isAxiosError" in (error as object)),
+const { postMock } = vi.hoisted(() => ({
+  postMock: vi.fn(),
 }));
+
+vi.mock("openapi-fetch", () => ({
+  default: vi.fn(() => ({
+    POST: postMock,
+  })),
+}));
+
+import { submitAuth } from "./auth";
 
 describe("submitAuth", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    postMock.mockReset();
+    vi.clearAllMocks();
   });
 
   it("returns auth response when request succeeds", async () => {
-    vi.mocked(axios.post).mockResolvedValue({
-      data: { userId: 1, email: "user@example.com", username: "valid.user", message: "Login successful" },
-    } as never);
+    postMock.mockResolvedValue({
+      data: {
+        userId: 1,
+        email: "user@example.com",
+        username: "valid.user",
+        message: "Login successful",
+      },
+      error: undefined,
+    });
 
-    const response = await submitAuth("signin", { email: "user@example.com", password: "12345678" });
+    const response = await submitAuth("signin", {
+      email: "user@example.com",
+      password: "12345678",
+    });
 
     expect(response.email).toBe("user@example.com");
     expect(response.username).toBe("valid.user");
     expect(response.message).toBe("Login successful");
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining("/api/auth/login"),
-      { email: "user@example.com", password: "12345678" },
-    );
+    expect(postMock).toHaveBeenCalledWith("/api/auth/login", {
+      body: { email: "user@example.com", password: "12345678" },
+    });
   });
 
   it("returns backend signin error message", async () => {
-    vi.mocked(axios.post).mockRejectedValue({
-      isAxiosError: true,
-      response: {
-        status: 401,
-        data: { message: "Invalid email or password" },
-      },
+    postMock.mockResolvedValue({
+      data: undefined,
+      error: new Error("Invalid email or password"),
     });
 
-    await expect(submitAuth("signin", { email: "user@example.com", password: "wrong-pass" })).rejects.toThrow("Invalid email or password");
+    await expect(
+      submitAuth("signin", {
+        email: "user@example.com",
+        password: "wrong-pass",
+      }),
+    ).rejects.toThrow("Invalid email or password");
   });
 
   it("posts username for signup and returns backend signup error message", async () => {
-    vi.mocked(axios.post).mockRejectedValue({
-      isAxiosError: true,
-      response: {
-        status: 409,
-        data: { message: "Email is already registered" },
-      },
+    postMock.mockResolvedValue({
+      data: undefined,
+      error: new Error("Email is already registered"),
     });
 
     await expect(
@@ -61,22 +72,27 @@ describe("submitAuth", () => {
       }),
     ).rejects.toThrow("Email is already registered");
 
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining("/api/auth/signup"),
-      {
+    expect(postMock).toHaveBeenCalledWith("/api/auth/signup", {
+      body: {
         email: "existing@example.com",
         password: "12345678",
         username: "valid.user",
         accountType: "provider",
         mobilityOptions: ["Scooter", "Bike"],
       },
-    );
+    });
   });
 
   it("returns signup response including username when request succeeds", async () => {
-    vi.mocked(axios.post).mockResolvedValue({
-      data: { userId: 2, email: "new@example.com", username: "new.user", message: "Signup successful" },
-    } as never);
+    postMock.mockResolvedValue({
+      data: {
+        userId: 2,
+        email: "new@example.com",
+        username: "new.user",
+        message: "Signup successful",
+      },
+      error: undefined,
+    });
 
     const response = await submitAuth("signup", {
       email: "new@example.com",
@@ -89,22 +105,27 @@ describe("submitAuth", () => {
     expect(response.email).toBe("new@example.com");
     expect(response.username).toBe("new.user");
     expect(response.message).toBe("Signup successful");
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining("/api/auth/signup"),
-      {
+    expect(postMock).toHaveBeenCalledWith("/api/auth/signup", {
+      body: {
         email: "new@example.com",
         password: "12345678",
         username: "new.user",
         accountType: "provider",
         mobilityOptions: ["Car"],
       },
-    );
+    });
   });
 
   it("sends account type for user signup without mobility options", async () => {
-    vi.mocked(axios.post).mockResolvedValue({
-      data: { userId: 3, email: "new2@example.com", username: "new.user2", message: "Signup successful" },
-    } as never);
+    postMock.mockResolvedValue({
+      data: {
+        userId: 3,
+        email: "new2@example.com",
+        username: "new.user2",
+        message: "Signup successful",
+      },
+      error: undefined,
+    });
 
     await submitAuth("signup", {
       email: "new2@example.com",
@@ -113,15 +134,26 @@ describe("submitAuth", () => {
       accountType: "user",
     });
 
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining("/api/auth/signup"),
-      {
+    expect(postMock).toHaveBeenCalledWith("/api/auth/signup", {
+      body: {
         email: "new2@example.com",
         password: "12345678",
         username: "new.user2",
         accountType: "user",
-        mobilityOptions: [],
       },
+    });
+  });
+
+  it("returns fallback message for non-Error failures", async () => {
+    postMock.mockResolvedValue({
+      data: undefined,
+      error: { message: "Backend says no" },
+    });
+
+    await expect(
+      submitAuth("signin", { email: "user@example.com", password: "12345678" }),
+    ).rejects.toThrow(
+      "Could not reach the server. Make sure the backend is running.",
     );
   });
 });

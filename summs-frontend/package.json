@@ -12,12 +12,13 @@
     "generate-types": "openapi-typescript http://localhost:8080/v3/api-docs -o src/api/types.ts"
   },
   "dependencies": {
-    "axios": "^1.11.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.10",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "axios": "^1.11.0",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
