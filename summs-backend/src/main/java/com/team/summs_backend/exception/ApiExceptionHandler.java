@@ -66,4 +66,20 @@ public class ApiExceptionHandler {
             .status(HttpStatus.CONFLICT)
             .body(new ErrorResponse(ex.getMessage()));
     }
+
+    @ExceptionHandler(StationNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponse> handleStationNotFound(StationNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(new ErrorResponse(ex.getMessage()));
+    }
 }

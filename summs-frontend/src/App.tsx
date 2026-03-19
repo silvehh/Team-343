@@ -5,6 +5,7 @@ import AppAppBar from "./components/AppAppBar";
 import MarketingPage from "./MarketingPage";
 import VehicleBrowsePage from "./pages/VehicleBrowsePage";
 import MyRentalsPage from "./pages/MyRentalsPage";
+import AdminStationsPage from "./pages/AdminStationsPage";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<MarketingPage />} />
         <Route path="/vehicles" element={<VehicleBrowsePage />} />
         <Route path="/rentals" element={<MyRentalsPage />} />
+        <Route path="/admin/stations" element={<AdminStationsPage />} />
       </Routes>
     </AppTheme>
   );

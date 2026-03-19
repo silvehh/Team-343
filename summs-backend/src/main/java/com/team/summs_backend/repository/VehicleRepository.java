@@ -27,4 +27,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v.station.id, v.vehicleType, COUNT(v) FROM Vehicle v WHERE v.station IS NOT NULL AND v.available = true GROUP BY v.station.id, v.vehicleType")
     List<Object[]> countAvailableGroupedByStationAndType();
+
+    List<Vehicle> findByStationId(Long stationId);
 }

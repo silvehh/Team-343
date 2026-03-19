@@ -27,6 +27,7 @@ import com.team.summs_backend.exception.InvalidCredentialsException;
 import com.team.summs_backend.exception.InvalidInputException;
 import com.team.summs_backend.model.AppUser;
 import com.team.summs_backend.model.MobilityProvider;
+import com.team.summs_backend.repository.AdminUserRepository;
 import com.team.summs_backend.repository.AppUserRepository;
 import com.team.summs_backend.repository.MobilityProviderRepository;
 
@@ -38,6 +39,9 @@ class AuthServiceTest {
 
     @Mock
     private MobilityProviderRepository mobilityProviderRepository;
+
+    @Mock
+    private AdminUserRepository adminUserRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;

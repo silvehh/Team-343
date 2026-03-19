@@ -44,7 +44,7 @@ export default function AppAppBar() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { username, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { username, isAuthenticated, accountType } = useSelector((state: RootState) => state.auth);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -91,9 +91,14 @@ export default function AppAppBar() {
               <Button variant="text" color="info" size="small" onClick={() => navigate("/vehicles")}>
                 Browse Vehicles
               </Button>
-              {isAuthenticated && (
+              {isAuthenticated && accountType !== "ADMIN" && (
                 <Button variant="text" color="info" size="small" onClick={() => navigate("/rentals")}>
                   My Rentals
+                </Button>
+              )}
+              {isAuthenticated && accountType === "ADMIN" && (
+                <Button variant="text" color="info" size="small" onClick={() => navigate("/admin/stations")}>
+                  Manage Stations
                 </Button>
               )}
             </Box>
@@ -156,9 +161,14 @@ export default function AppAppBar() {
                 <MenuItem onClick={() => { setOpen(false); navigate("/vehicles"); }}>
                   Browse Vehicles
                 </MenuItem>
-                {isAuthenticated && (
+                {isAuthenticated && accountType !== "ADMIN" && (
                   <MenuItem onClick={() => { setOpen(false); navigate("/rentals"); }}>
                     My Rentals
+                  </MenuItem>
+                )}
+                {isAuthenticated && accountType === "ADMIN" && (
+                  <MenuItem onClick={() => { setOpen(false); navigate("/admin/stations"); }}>
+                    Manage Stations
                   </MenuItem>
                 )}
                 <Divider sx={{ my: 3 }} />
