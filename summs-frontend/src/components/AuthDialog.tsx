@@ -19,11 +19,18 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type AuthMode, submitAuth } from "../api/auth";
 
+type AuthSuccessPayload = {
+  userId: number;
+  username: string;
+  email: string;
+  accountType: string;
+};
+
 type AuthDialogProps = {
   open: boolean;
   initialMode: AuthMode;
   onClose: () => void;
-  onAuthSuccess: (username: string) => void;
+  onAuthSuccess: (payload: AuthSuccessPayload) => void;
 };
 
 export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }: AuthDialogProps) {
@@ -119,12 +126,18 @@ export default function AuthDialog({ open, initialMode, onClose, onAuthSuccess }
           mobilityOptions: accountType === "provider" ? mobilityOptions : [],
         })
         : await submitAuth("signin", { email, password });
+
       const authenticatedUsername = data.username?.trim();
       if (!authenticatedUsername) {
         throw new Error("The server did not return a username.");
       }
 
-      onAuthSuccess(authenticatedUsername);
+      onAuthSuccess({
+        userId: data.userId!,
+        username: authenticatedUsername,
+        email: data.email!,
+        accountType: data.accountType ?? "USER",
+      });
       onClose();
     } catch (error) {
       if (error instanceof Error) {

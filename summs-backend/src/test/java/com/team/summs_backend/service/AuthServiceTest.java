@@ -17,13 +17,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.team.summs_backend.dto.AuthResponse;
 import com.team.summs_backend.dto.LoginRequest;
 import com.team.summs_backend.dto.SignupRequest;
+import com.team.summs_backend.exception.EmailAlreadyRegisteredException;
+import com.team.summs_backend.exception.InvalidCredentialsException;
+import com.team.summs_backend.exception.InvalidInputException;
 import com.team.summs_backend.model.AppUser;
 import com.team.summs_backend.model.MobilityProvider;
 import com.team.summs_backend.repository.AppUserRepository;
@@ -70,6 +71,7 @@ class AuthServiceTest {
         assertEquals(7L, response.userId());
         assertEquals("user@example.com", response.email());
         assertEquals("valid.user", response.username());
+        assertEquals("MOBILITY_PROVIDER", response.accountType());
         assertEquals("Signup successful", response.message());
         verify(mobilityProviderRepository).save(argThat(provider ->
             "user@example.com".equals(provider.getEmail())
@@ -98,7 +100,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenMobilityOptionsContainInvalidValue() {
+    void signupShouldThrowWhenMobilityOptionsContainInvalidValue() {
         SignupRequest invalidRequest = new SignupRequest(
             "user@example.com",
             "12345678",
@@ -107,24 +109,20 @@ class AuthServiceTest {
             List.of("Scooter", "Train")
         );
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Mobility options must only include Scooter, Bike, or Car", ex.getReason());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
+        assertEquals("Mobility options must only include Scooter, Bike, or Car", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenProviderHasNoMobilityOptions() {
+    void signupShouldThrowWhenProviderHasNoMobilityOptions() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "valid.user", "provider", List.of());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Select at least one mobility option", ex.getReason());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
+        assertEquals("Select at least one mobility option", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenUserIncludesMobilityOptions() {
+    void signupShouldThrowWhenUserIncludesMobilityOptions() {
         SignupRequest invalidRequest = new SignupRequest(
             "user@example.com",
             "12345678",
@@ -133,92 +131,76 @@ class AuthServiceTest {
             List.of("Scooter")
         );
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Mobility options are only allowed for mobility providers", ex.getReason());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
+        assertEquals("Mobility options are only allowed for mobility providers", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowConflictWhenEmailAlreadyExists() {
+    void signupShouldThrowWhenEmailAlreadyExists() {
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(true);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(signupRequest));
-
-        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
-        assertEquals("Email is already registered", ex.getReason());
+        EmailAlreadyRegisteredException ex = assertThrows(EmailAlreadyRegisteredException.class, () -> authService.signup(signupRequest));
+        assertEquals("Email is already registered", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowConflictWhenDatabaseUniqueConstraintFails() {
+    void signupShouldThrowWhenDatabaseUniqueConstraintFails() {
         when(appUserRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(mobilityProviderRepository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
         when(passwordEncoder.encode("12345678")).thenReturn("hashed-password");
         when(mobilityProviderRepository.save(any(MobilityProvider.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(signupRequest));
-
-        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
-        assertEquals("Email is already registered", ex.getReason());
+        EmailAlreadyRegisteredException ex = assertThrows(EmailAlreadyRegisteredException.class, () -> authService.signup(signupRequest));
+        assertEquals("Email is already registered", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenUsernameIsBlank() {
+    void signupShouldThrowWhenUsernameIsBlank() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "   ", "user", null);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Username is required", ex.getReason());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
+        assertEquals("Username is required", ex.getMessage());
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenUsernameHasInvalidCharacters() {
+    void signupShouldThrowWhenUsernameHasInvalidCharacters() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "bad name!", "user", null);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
         assertEquals(
             "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
-            ex.getReason()
+            ex.getMessage()
         );
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenUsernameIsTooShort() {
+    void signupShouldThrowWhenUsernameIsTooShort() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "ab", "user", null);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
         assertEquals(
             "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
-            ex.getReason()
+            ex.getMessage()
         );
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenUsernameIsTooLong() {
+    void signupShouldThrowWhenUsernameIsTooLong() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "abcdefghijklmnopqrstu", "user", null);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
         assertEquals(
             "Username must be 3 to 20 characters and contain only letters, numbers, periods, underscores, or hyphens",
-            ex.getReason()
+            ex.getMessage()
         );
     }
 
     @Test
-    void signupShouldThrowBadRequestWhenAccountTypeIsMissing() {
+    void signupShouldThrowWhenAccountTypeIsMissing() {
         SignupRequest invalidRequest = new SignupRequest("user@example.com", "12345678", "valid.user", "   ", null);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signup(invalidRequest));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Account type is required", ex.getReason());
+        InvalidInputException ex = assertThrows(InvalidInputException.class, () -> authService.signup(invalidRequest));
+        assertEquals("Account type is required", ex.getMessage());
     }
 
     @Test
@@ -237,22 +219,21 @@ class AuthServiceTest {
         assertEquals(3L, response.userId());
         assertEquals("user@example.com", response.email());
         assertEquals("valid.user", response.username());
+        assertEquals("USER", response.accountType());
         assertEquals("Login successful", response.message());
     }
 
     @Test
-    void loginShouldThrowUnauthorizedWhenEmailDoesNotExist() {
+    void loginShouldThrowWhenEmailDoesNotExist() {
         when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.empty());
         when(mobilityProviderRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.empty());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
-
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
-        assertEquals("Incorrect email or password", ex.getReason());
+        InvalidCredentialsException ex = assertThrows(InvalidCredentialsException.class, () -> authService.login(loginRequest));
+        assertEquals("Incorrect email or password", ex.getMessage());
     }
 
     @Test
-    void loginShouldThrowUnauthorizedWhenPasswordIsWrong() {
+    void loginShouldThrowWhenPasswordIsWrong() {
         AppUser existingUser = new AppUser();
         existingUser.setEmail("user@example.com");
         existingUser.setUsername("valid.user");
@@ -261,10 +242,8 @@ class AuthServiceTest {
         when(appUserRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("12345678", "stored-hash")).thenReturn(false);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
-
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
-        assertEquals("Incorrect email or password", ex.getReason());
+        InvalidCredentialsException ex = assertThrows(InvalidCredentialsException.class, () -> authService.login(loginRequest));
+        assertEquals("Incorrect email or password", ex.getMessage());
     }
 
     @Test
@@ -284,5 +263,6 @@ class AuthServiceTest {
         assertEquals(11L, response.userId());
         assertEquals("user@example.com", response.email());
         assertEquals("valid.user", response.username());
+        assertEquals("MOBILITY_PROVIDER", response.accountType());
     }
 }

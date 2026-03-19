@@ -70,7 +70,7 @@ public class AuthService {
         AppUser appUser = appUserRepository.findByEmailIgnoreCase(email).orElse(null);
         if (appUser != null) {
             validatePasswordMatch(request.password(), appUser.getPasswordHash());
-            return new AuthResponse(appUser.getId(), appUser.getEmail(), appUser.getUsername(), "Login successful");
+            return new AuthResponse(appUser.getId(), appUser.getEmail(), appUser.getUsername(), "USER", "Login successful");
         }
 
         MobilityProvider mobilityProvider = mobilityProviderRepository.findByEmailIgnoreCase(email)
@@ -82,6 +82,7 @@ public class AuthService {
             mobilityProvider.getId(),
             mobilityProvider.getEmail(),
             mobilityProvider.getUsername(),
+            "MOBILITY_PROVIDER",
             "Login successful"
         );
     }
@@ -97,7 +98,7 @@ public class AuthService {
         appUser.setPasswordHash(passwordHash);
 
         AppUser saved = appUserRepository.save(appUser);
-        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "Signup successful");
+        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "USER", "Signup successful");
     }
 
     private AuthResponse signupMobilityProvider(
@@ -113,7 +114,7 @@ public class AuthService {
         mobilityProvider.setMobilityOptions(normalizeAndValidateMobilityOptions(rawMobilityOptions));
 
         MobilityProvider saved = mobilityProviderRepository.save(mobilityProvider);
-        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "Signup successful");
+        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "MOBILITY_PROVIDER", "Signup successful");
     }
 
     private boolean emailExists(String email) {
