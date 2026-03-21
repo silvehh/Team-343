@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useNavigate } from "react-router";
+import { useSelector, useDispatch } from "react-redux";
 import { styled, alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
@@ -16,9 +18,8 @@ import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 import Sitemark from "./SitemarkIcon";
 import AuthDialog from "./AuthDialog";
 import { type AuthMode } from "../api/auth";
-
-const AUTH_USERNAME_KEY = "summs.auth.username";
-const AUTH_EMAIL_KEY = "summs.auth.email";
+import { login, logout } from "../store/authSlice";
+import type { RootState, AppDispatch } from "../store/store";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -40,9 +41,10 @@ export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = React.useState(false);
   const [authMode, setAuthMode] = React.useState<AuthMode>("signin");
-  const [currentUsername, setCurrentUsername] = React.useState(
-    () => localStorage.getItem(AUTH_USERNAME_KEY) ?? localStorage.getItem(AUTH_EMAIL_KEY) ?? "",
-  );
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { username, isAuthenticated, accountType } = useSelector((state: RootState) => state.auth);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -58,15 +60,12 @@ export default function AppAppBar() {
   };
 
   const handleLogout = () => {
-    setCurrentUsername("");
-    localStorage.removeItem(AUTH_USERNAME_KEY);
-    localStorage.removeItem(AUTH_EMAIL_KEY);
+    dispatch(logout());
+    navigate("/");
   };
 
-  const handleAuthSuccess = (username: string) => {
-    setCurrentUsername(username);
-    localStorage.setItem(AUTH_USERNAME_KEY, username);
-    localStorage.removeItem(AUTH_EMAIL_KEY);
+  const handleAuthSuccess = (payload: { userId: number; username: string; email: string; accountType: string }) => {
+    dispatch(login(payload));
   };
 
   return (
@@ -85,36 +84,23 @@ export default function AppAppBar() {
           <Box
             sx={{ flexGrow: 1, display: "flex", alignItems: "center", px: 0 }}
           >
-            <Sitemark />
+            <Box sx={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => navigate("/")}>
+              <Sitemark />
+            </Box>
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
-              <Button variant="text" color="info" size="small">
-                Features
+              <Button variant="text" color="info" size="small" onClick={() => navigate("/vehicles")}>
+                Browse Vehicles
               </Button>
-              <Button variant="text" color="info" size="small">
-                Testimonials
-              </Button>
-              <Button variant="text" color="info" size="small">
-                Highlights
-              </Button>
-              <Button variant="text" color="info" size="small">
-                Pricing
-              </Button>
-              <Button
-                variant="text"
-                color="info"
-                size="small"
-                sx={{ minWidth: 0 }}
-              >
-                FAQ
-              </Button>
-              <Button
-                variant="text"
-                color="info"
-                size="small"
-                sx={{ minWidth: 0 }}
-              >
-                Blog
-              </Button>
+              {isAuthenticated && accountType !== "ADMIN" && (
+                <Button variant="text" color="info" size="small" onClick={() => navigate("/rentals")}>
+                  My Rentals
+                </Button>
+              )}
+              {isAuthenticated && accountType === "ADMIN" && (
+                <Button variant="text" color="info" size="small" onClick={() => navigate("/admin/stations")}>
+                  Manage Stations
+                </Button>
+              )}
             </Box>
           </Box>
           <Box
@@ -124,10 +110,10 @@ export default function AppAppBar() {
               alignItems: "center",
             }}
           >
-            {currentUsername ? (
+            {isAuthenticated ? (
               <>
                 <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
-                  {currentUsername}
+                  {username}
                 </Typography>
                 <Button color="primary" variant="outlined" size="small" onClick={handleLogout}>
                   Log out
@@ -172,15 +158,22 @@ export default function AppAppBar() {
                   </IconButton>
                 </Box>
 
-                <MenuItem>Features</MenuItem>
-                <MenuItem>Testimonials</MenuItem>
-                <MenuItem>Highlights</MenuItem>
-                <MenuItem>Pricing</MenuItem>
-                <MenuItem>FAQ</MenuItem>
-                <MenuItem>Blog</MenuItem>
+                <MenuItem onClick={() => { setOpen(false); navigate("/vehicles"); }}>
+                  Browse Vehicles
+                </MenuItem>
+                {isAuthenticated && accountType !== "ADMIN" && (
+                  <MenuItem onClick={() => { setOpen(false); navigate("/rentals"); }}>
+                    My Rentals
+                  </MenuItem>
+                )}
+                {isAuthenticated && accountType === "ADMIN" && (
+                  <MenuItem onClick={() => { setOpen(false); navigate("/admin/stations"); }}>
+                    Manage Stations
+                  </MenuItem>
+                )}
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
-                  {currentUsername ? (
+                  {isAuthenticated ? (
                     <Button color="primary" variant="outlined" fullWidth onClick={handleLogout}>
                       Log out
                     </Button>
@@ -199,7 +192,7 @@ export default function AppAppBar() {
                   )}
                 </MenuItem>
                 <MenuItem>
-                  {!currentUsername && (
+                  {!isAuthenticated && (
                     <Button
                       color="primary"
                       variant="outlined"

@@ -17,8 +17,10 @@ import com.team.summs_backend.exception.EmailAlreadyRegisteredException;
 import com.team.summs_backend.exception.InvalidCredentialsException;
 import com.team.summs_backend.exception.InvalidInputException;
 import com.team.summs_backend.model.AccountType;
+import com.team.summs_backend.model.AdminUser;
 import com.team.summs_backend.model.AppUser;
 import com.team.summs_backend.model.MobilityProvider;
+import com.team.summs_backend.repository.AdminUserRepository;
 import com.team.summs_backend.repository.AppUserRepository;
 import com.team.summs_backend.repository.MobilityProviderRepository;
 
@@ -30,15 +32,18 @@ public class AuthService {
 
     private final AppUserRepository appUserRepository;
     private final MobilityProviderRepository mobilityProviderRepository;
+    private final AdminUserRepository adminUserRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(
         AppUserRepository appUserRepository,
         MobilityProviderRepository mobilityProviderRepository,
+        AdminUserRepository adminUserRepository,
         PasswordEncoder passwordEncoder
     ) {
         this.appUserRepository = appUserRepository;
         this.mobilityProviderRepository = mobilityProviderRepository;
+        this.adminUserRepository = adminUserRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -58,6 +63,7 @@ public class AuthService {
             return switch (accountType) {
                 case USER -> signupUser(email, username, passwordHash, request.mobilityOptions());
                 case MOBILITY_PROVIDER -> signupMobilityProvider(email, username, passwordHash, request.mobilityOptions());
+                case ADMIN -> throw new InvalidInputException("Admin accounts cannot be created via signup");
             };
         } catch (DataIntegrityViolationException ex) {
             throw new EmailAlreadyRegisteredException("Email is already registered", ex);
@@ -67,10 +73,16 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         String email = normalizeAndValidateEmail(request.email());
 
+        AdminUser adminUser = adminUserRepository.findByEmailIgnoreCase(email).orElse(null);
+        if (adminUser != null) {
+            validatePasswordMatch(request.password(), adminUser.getPasswordHash());
+            return new AuthResponse(adminUser.getId(), adminUser.getEmail(), adminUser.getUsername(), "ADMIN", "Login successful");
+        }
+
         AppUser appUser = appUserRepository.findByEmailIgnoreCase(email).orElse(null);
         if (appUser != null) {
             validatePasswordMatch(request.password(), appUser.getPasswordHash());
-            return new AuthResponse(appUser.getId(), appUser.getEmail(), appUser.getUsername(), "Login successful");
+            return new AuthResponse(appUser.getId(), appUser.getEmail(), appUser.getUsername(), "USER", "Login successful");
         }
 
         MobilityProvider mobilityProvider = mobilityProviderRepository.findByEmailIgnoreCase(email)
@@ -82,6 +94,7 @@ public class AuthService {
             mobilityProvider.getId(),
             mobilityProvider.getEmail(),
             mobilityProvider.getUsername(),
+            "MOBILITY_PROVIDER",
             "Login successful"
         );
     }
@@ -97,7 +110,7 @@ public class AuthService {
         appUser.setPasswordHash(passwordHash);
 
         AppUser saved = appUserRepository.save(appUser);
-        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "Signup successful");
+        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "USER", "Signup successful");
     }
 
     private AuthResponse signupMobilityProvider(
@@ -113,11 +126,13 @@ public class AuthService {
         mobilityProvider.setMobilityOptions(normalizeAndValidateMobilityOptions(rawMobilityOptions));
 
         MobilityProvider saved = mobilityProviderRepository.save(mobilityProvider);
-        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "Signup successful");
+        return new AuthResponse(saved.getId(), saved.getEmail(), saved.getUsername(), "MOBILITY_PROVIDER", "Signup successful");
     }
 
     private boolean emailExists(String email) {
-        return appUserRepository.existsByEmailIgnoreCase(email) || mobilityProviderRepository.existsByEmailIgnoreCase(email);
+        return appUserRepository.existsByEmailIgnoreCase(email)
+            || mobilityProviderRepository.existsByEmailIgnoreCase(email)
+            || adminUserRepository.existsByEmailIgnoreCase(email);
     }
 
     private void validatePasswordMatch(String rawPassword, String storedPasswordHash) {

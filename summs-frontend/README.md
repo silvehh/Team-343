@@ -1,5 +1,15 @@
 # SUMMS Frontend
 
+## Prerequisites
+
+The project uses MapBox API. Create an account and fetch your Mapbox public token.
+
+Add the following line to the `.env` file in `/summs-frontend`
+
+```
+VITE_MAPBOX_TOKEN=pk.your_public_mapbox_token_here
+```
+
 ## Material UI
 
 The frontend uses the React component library.
