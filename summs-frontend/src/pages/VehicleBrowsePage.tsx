@@ -10,14 +10,18 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Badge from "@mui/material/Badge";
 import CircularProgress from "@mui/material/CircularProgress";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import PedalBikeIcon from "@mui/icons-material/PedalBike";
 import ElectricScooterIcon from "@mui/icons-material/ElectricScooter";
 import PlaceIcon from "@mui/icons-material/Place";
+import NavigationIcon from "@mui/icons-material/Navigation";
 import { fetchStations, type StationResponse } from "../api/stations";
 import { fetchVehicles, type VehicleResponse } from "../api/vehicles";
 import type { RootState } from "../store/store";
 import ReservationDialog from "../components/ReservationDialog";
+import { navigateToStation } from "../services/navigationService";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
@@ -40,6 +44,7 @@ export default function VehicleBrowsePage() {
   const [popupStation, setPopupStation] = React.useState<StationResponse | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [reserveVehicle, setReserveVehicle] = React.useState<VehicleResponse | null>(null);
+  const [navigationError, setNavigationError] = React.useState<string | null>(null);
 
   const loadStations = React.useCallback(async () => {
     try {
@@ -96,6 +101,22 @@ export default function VehicleBrowsePage() {
 
   const getStationTotal = (s: StationResponse) =>
     (s.availableCars ?? 0) + (s.availableBikes ?? 0) + (s.availableScooters ?? 0);
+
+  const handleNavigateToStation = (station: StationResponse) => {
+    const result = navigateToStation({
+      latitude: station.latitude,
+      longitude: station.longitude,
+      label: station.name,
+    });
+
+    if (!result.success) {
+      setNavigationError(result.error || "Failed to open navigation");
+    }
+  };
+
+  const handleCloseNavigationError = () => {
+    setNavigationError(null);
+  };
 
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
@@ -159,6 +180,15 @@ export default function VehicleBrowsePage() {
                   <Typography variant="caption" display="block" sx={{ color: "inherit" }}>
                     Scooters: {popupStation.availableScooters ?? 0}/{popupStation.scooterCapacity ?? 0}
                   </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<NavigationIcon />}
+                    onClick={() => handleNavigateToStation(popupStation)}
+                    sx={{ mt: 1, width: "100%" }}
+                  >
+                    Navigate
+                  </Button>
                 </Box>
               </Popup>
             )}
@@ -303,6 +333,17 @@ export default function VehicleBrowsePage() {
           }}
         />
       )}
+
+      <Snackbar
+        open={!!navigationError}
+        autoHideDuration={6000}
+        onClose={handleCloseNavigationError}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseNavigationError} severity="error" sx={{ width: "100%" }}>
+          {navigationError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
