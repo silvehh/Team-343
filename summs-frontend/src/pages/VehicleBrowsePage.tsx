@@ -17,6 +17,15 @@ import PedalBikeIcon from "@mui/icons-material/PedalBike";
 import ElectricScooterIcon from "@mui/icons-material/ElectricScooter";
 import PlaceIcon from "@mui/icons-material/Place";
 import NavigationIcon from "@mui/icons-material/Navigation";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import { fetchStations, type StationResponse } from "../api/stations";
 import { fetchVehicles, type VehicleResponse } from "../api/vehicles";
 import type { RootState } from "../store/store";
@@ -194,10 +203,136 @@ export default function VehicleBrowsePage() {
             )}
           </Map>
         ) : (
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <Typography color="text.secondary">
-              Set VITE_MAPBOX_TOKEN in .env to enable the map
-            </Typography>
+          <Box sx={{ 
+            display: "flex", 
+            flexDirection: "column",
+            height: "100%",
+            pt: "80px",
+            px: 3,
+            bgcolor: "background.default"
+          }}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                📍 Mobility Stations
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Select a station to view available vehicles and get directions
+              </Typography>
+            </Box>
+            
+            <Box sx={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              gap: 2,
+              overflow: "auto",
+              flex: 1,
+              pb: 2
+            }}>
+              {stations.map((station) => (
+                <Card 
+                  key={station.id}
+                  elevation={selectedStationId === station.id ? 4 : 1}
+                  sx={{ 
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    border: selectedStationId === station.id ? 2 : 1,
+                    borderColor: selectedStationId === station.id ? "primary.main" : "divider",
+                    "&:hover": {
+                      elevation: 3,
+                      transform: "translateY(-2px)",
+                      borderColor: "primary.light"
+                    }
+                  }}
+                  onClick={() => handleStationClick(station)}
+                >
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <PlaceIcon 
+                          sx={{ 
+                            fontSize: 28,
+                            color: selectedStationId === station.id ? "primary.main" : "error.main" 
+                          }} 
+                        />
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                          {station.name}
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={`${getStationTotal(station)} available`}
+                        size="small"
+                        color={getStationTotal(station) > 0 ? "success" : "default"}
+                        variant={getStationTotal(station) > 0 ? "filled" : "outlined"}
+                      />
+                    </Box>
+
+                    <Divider sx={{ mb: 2 }} />
+
+                    <Box sx={{ display: "flex", justifyContent: "space-around", mb: 2 }}>
+                      <Box sx={{ textAlign: "center" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                          <DirectionsCarIcon fontSize="small" color="action" />
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {station.availableCars ?? 0}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Cars
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: "center" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                          <PedalBikeIcon fontSize="small" color="action" />
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {station.availableBikes ?? 0}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Bikes
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: "center" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                          <ElectricScooterIcon fontSize="small" color="action" />
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {station.availableScooters ?? 0}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Scooters
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Button
+                      fullWidth
+                      variant={selectedStationId === station.id ? "contained" : "outlined"}
+                      startIcon={<NavigationIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNavigateToStation(station);
+                      }}
+                      sx={{ mt: 1 }}
+                    >
+                      Navigate to Station
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+              {stations.length === 0 && (
+                <Box sx={{ 
+                  gridColumn: "1 / -1", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  py: 8 
+                }}>
+                  <Typography color="text.secondary" variant="h6">
+                    No stations available.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
         )}
       </Box>
