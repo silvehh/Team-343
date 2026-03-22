@@ -91,6 +91,12 @@ export default function AppAppBar() {
               <Button variant="text" color="info" size="small" onClick={() => navigate("/vehicles")}>
                 Browse Vehicles
               </Button>
+              <Button variant="text" color="info" size="small" onClick={() => navigate("/parking")}>
+                Parking
+              </Button>
+              <Button variant="text" color="info" size="small" onClick={() => navigate("/transit")}>
+                Transit
+              </Button>
               {isAuthenticated && accountType !== "ADMIN" && (
                 <Button variant="text" color="info" size="small" onClick={() => navigate("/rentals")}>
                   My Rentals
@@ -160,6 +166,12 @@ export default function AppAppBar() {
 
                 <MenuItem onClick={() => { setOpen(false); navigate("/vehicles"); }}>
                   Browse Vehicles
+                </MenuItem>
+                <MenuItem onClick={() => { setOpen(false); navigate("/parking"); }}>
+                  Parking
+                </MenuItem>
+                <MenuItem onClick={() => { setOpen(false); navigate("/transit"); }}>
+                  Transit
                 </MenuItem>
                 {isAuthenticated && accountType !== "ADMIN" && (
                   <MenuItem onClick={() => { setOpen(false); navigate("/rentals"); }}>
