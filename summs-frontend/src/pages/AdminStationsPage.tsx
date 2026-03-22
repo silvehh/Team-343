@@ -1,8 +1,6 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import Map, { Marker, Popup, type MapLayerMouseEvent } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -14,11 +12,17 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PlaceIcon from "@mui/icons-material/Place";
-import AddLocationAltIcon from "@mui/icons-material/AddLocationAlt";
+import AddIcon from "@mui/icons-material/Add";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import PedalBikeIcon from "@mui/icons-material/PedalBike";
+import ElectricScooterIcon from "@mui/icons-material/ElectricScooter";
 import type { RootState } from "../store/store";
 import {
   fetchAdminStations,
@@ -28,8 +32,6 @@ import {
   type StationResponse,
   type StationRequest,
 } from "../api/admin";
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
 const EMPTY_FORM: StationRequest = {
   name: "",
@@ -54,8 +56,6 @@ export default function AdminStationsPage() {
   const [snackbar, setSnackbar] = React.useState({ open: false, message: "", severity: "success" as "success" | "error" });
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletingStation, setDeletingStation] = React.useState<StationResponse | null>(null);
-  const [popupStation, setPopupStation] = React.useState<StationResponse | null>(null);
-  const [pendingPin, setPendingPin] = React.useState<{ lng: number; lat: number } | null>(null);
 
   const isAdmin = isAuthenticated && accountType === "ADMIN";
 
@@ -63,9 +63,6 @@ export default function AdminStationsPage() {
     try {
       const data = await fetchAdminStations();
       setStations(data);
-      setPopupStation((prev) =>
-        prev ? data.find((s) => s.id === prev.id) ?? null : null,
-      );
     } catch (err) {
       setSnackbar({ open: true, message: (err as Error).message, severity: "error" });
     }
@@ -81,24 +78,14 @@ export default function AdminStationsPage() {
 
   if (!isAdmin) return null;
 
-  const handleMapClick = (e: MapLayerMouseEvent) => {
-    setPopupStation(null);
-    const { lng, lat } = e.lngLat;
-    setPendingPin({ lng, lat });
+  const openCreateDialog = () => {
     setEditingId(null);
-    setForm({ ...EMPTY_FORM, latitude: lat, longitude: lng });
+    setForm({ ...EMPTY_FORM });
     setFormError("");
     setDialogOpen(true);
   };
 
-  const handleMarkerClick = (station: StationResponse, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPendingPin(null);
-    setPopupStation(station);
-  };
-
   const openEditDialog = (station: StationResponse) => {
-    setPopupStation(null);
     setEditingId(station.id!);
     setForm({
       name: station.name ?? "",
@@ -113,7 +100,6 @@ export default function AdminStationsPage() {
   };
 
   const openDeleteDialog = (station: StationResponse) => {
-    setPopupStation(null);
     setDeletingStation(station);
     setDeleteDialogOpen(true);
   };
@@ -132,7 +118,6 @@ export default function AdminStationsPage() {
         setSnackbar({ open: true, message: "Station created", severity: "success" });
       }
       setDialogOpen(false);
-      setPendingPin(null);
       loadStations();
     } catch (err) {
       setFormError((err as Error).message);
@@ -141,7 +126,6 @@ export default function AdminStationsPage() {
 
   const handleDialogClose = () => {
     setDialogOpen(false);
-    setPendingPin(null);
   };
 
   const handleDelete = async () => {
@@ -166,123 +150,136 @@ export default function AdminStationsPage() {
     }
   };
 
+  const getStationTotal = (s: StationResponse) =>
+    (s.availableCars ?? 0) + (s.availableBikes ?? 0) + (s.availableScooters ?? 0);
+
   return (
-    <Box sx={{ height: "100vh", width: "100%" }}>
-      {/* Instruction banner */}
-      <Box
-        sx={{
-          position: "fixed",
-          top: 90,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          pointerEvents: "none",
-        }}
-      >
-        <Chip
-          icon={<AddLocationAltIcon />}
-          label="Click anywhere on the map to add a station"
-          color="primary"
-          variant="filled"
-          sx={{ pointerEvents: "auto", fontSize: "0.875rem", py: 2.5, px: 1 }}
-        />
-      </Box>
-
-      {MAPBOX_TOKEN ? (
-        <Map
-          initialViewState={{
-            longitude: -73.575,
-            latitude: 45.515,
-            zoom: 13,
-          }}
-          style={{ width: "100%", height: "100%" }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
-          mapboxAccessToken={MAPBOX_TOKEN}
-          onClick={handleMapClick}
-        >
-          {/* Existing station markers */}
-          {stations.map((station) => (
-            <Marker
-              key={station.id}
-              longitude={station.longitude ?? 0}
-              latitude={station.latitude ?? 0}
-              anchor="bottom"
-              onClick={(e) => handleMarkerClick(station, e.originalEvent as unknown as React.MouseEvent)}
-            >
-              <PlaceIcon
-                sx={{
-                  fontSize: 40,
-                  color: "error.main",
-                  cursor: "pointer",
-                  "&:hover": { color: "primary.main" },
-                }}
-              />
-            </Marker>
-          ))}
-
-          {/* Pending new pin (shown while create dialog is open) */}
-          {pendingPin && (
-            <Marker
-              longitude={pendingPin.lng}
-              latitude={pendingPin.lat}
-              anchor="bottom"
-            >
-              <PlaceIcon
-                sx={{
-                  fontSize: 40,
-                  color: "success.main",
-                  animation: "bounce 0.5s ease",
-                  "@keyframes bounce": {
-                    "0%": { transform: "translateY(-20px)", opacity: 0 },
-                    "60%": { transform: "translateY(4px)" },
-                    "100%": { transform: "translateY(0)", opacity: 1 },
-                  },
-                }}
-              />
-            </Marker>
-          )}
-
-          {/* Station popup */}
-          {popupStation && (
-            <Popup
-              longitude={popupStation.longitude ?? 0}
-              latitude={popupStation.latitude ?? 0}
-              anchor="top"
-              onClose={() => setPopupStation(null)}
-              closeOnClick={false}
-            >
-              <Box sx={{ color: "#333", p: 0.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: "inherit" }}>
-                  {popupStation.name}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ color: "inherit" }}>
-                  Cars: {popupStation.availableCars ?? 0} / {popupStation.carCapacity ?? 0}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ color: "inherit" }}>
-                  Bikes: {popupStation.availableBikes ?? 0} / {popupStation.bikeCapacity ?? 0}
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ color: "inherit", mb: 1 }}>
-                  Scooters: {popupStation.availableScooters ?? 0} / {popupStation.scooterCapacity ?? 0}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 0.5 }}>
-                  <IconButton size="small" onClick={() => openEditDialog(popupStation)} color="primary">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => openDeleteDialog(popupStation)} color="error">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Popup>
-          )}
-        </Map>
-      ) : (
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Typography color="text.secondary">
-            Set VITE_MAPBOX_TOKEN in .env to enable the map
+    <Box sx={{ height: "100vh", width: "100%", pt: "80px", px: 3, bgcolor: "background.default" }}>
+      {/* Header */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+            🛠️ Station Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Create, edit, and delete mobility stations
           </Typography>
         </Box>
-      )}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={openCreateDialog}
+        >
+          Add Station
+        </Button>
+      </Box>
+
+      {/* Station Cards Grid */}
+      <Box sx={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+        gap: 2,
+        overflow: "auto",
+        pb: 2
+      }}>
+        {stations.map((station) => (
+          <Card 
+            key={station.id}
+            elevation={1}
+            sx={{ 
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                elevation: 3,
+                transform: "translateY(-2px)",
+              }
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PlaceIcon sx={{ fontSize: 28, color: "error.main" }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                    {station.name}
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={`${getStationTotal(station)} available`}
+                  size="small"
+                  color={getStationTotal(station) > 0 ? "success" : "default"}
+                  variant={getStationTotal(station) > 0 ? "filled" : "outlined"}
+                />
+              </Box>
+
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                📍 {station.latitude?.toFixed(4)}, {station.longitude?.toFixed(4)}
+              </Typography>
+
+              <Divider sx={{ mb: 2 }} />
+
+              <Box sx={{ display: "flex", justifyContent: "space-around", mb: 2 }}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                    <DirectionsCarIcon fontSize="small" color="action" />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {station.availableCars ?? 0}/{station.carCapacity ?? 0}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">Cars</Typography>
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                    <PedalBikeIcon fontSize="small" color="action" />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {station.availableBikes ?? 0}/{station.bikeCapacity ?? 0}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">Bikes</Typography>
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                    <ElectricScooterIcon fontSize="small" color="action" />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {station.availableScooters ?? 0}/{station.scooterCapacity ?? 0}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">Scooters</Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={() => openEditDialog(station)}
+                >
+                  Edit
+                </Button>
+                <IconButton color="error" onClick={() => openDeleteDialog(station)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            </CardContent>
+          </Card>
+        ))}
+        {stations.length === 0 && (
+          <Box sx={{ 
+            gridColumn: "1 / -1", 
+            display: "flex", 
+            flexDirection: "column",
+            alignItems: "center", 
+            justifyContent: "center",
+            py: 8 
+          }}>
+            <Typography color="text.secondary" variant="h6" sx={{ mb: 2 }}>
+              No stations yet.
+            </Typography>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
+              Create First Station
+            </Button>
+          </Box>
+        )}
+      </Box>
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="sm" fullWidth>
