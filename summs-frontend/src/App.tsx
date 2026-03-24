@@ -6,6 +6,8 @@ import MarketingPage from "./MarketingPage";
 import VehicleBrowsePage from "./pages/VehicleBrowsePage";
 import MyRentalsPage from "./pages/MyRentalsPage";
 import AdminStationsPage from "./pages/AdminStationsPage";
+import ParkingPage from "./pages/ParkingPage";
+import TransitPage from "./pages/TransitPage";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
         <Route path="/" element={<MarketingPage />} />
         <Route path="/vehicles" element={<VehicleBrowsePage />} />
         <Route path="/rentals" element={<MyRentalsPage />} />
+        <Route path="/parking" element={<ParkingPage />} />
+        <Route path="/transit" element={<TransitPage />} />
         <Route path="/admin/stations" element={<AdminStationsPage />} />
       </Routes>
     </AppTheme>
