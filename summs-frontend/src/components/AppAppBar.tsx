@@ -102,6 +102,11 @@ export default function AppAppBar() {
                   My Rentals
                 </Button>
               )}
+              {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
+                <Button variant="text" color="info" size="small" onClick={() => navigate("/provider/vehicles")}>
+                  My Vehicles
+                </Button>
+              )}
               {isAuthenticated && accountType === "ADMIN" && (
                 <Button variant="text" color="info" size="small" onClick={() => navigate("/admin/stations")}>
                   Manage Stations
@@ -176,6 +181,11 @@ export default function AppAppBar() {
                 {isAuthenticated && accountType !== "ADMIN" && (
                   <MenuItem onClick={() => { setOpen(false); navigate("/rentals"); }}>
                     My Rentals
+                  </MenuItem>
+                )}
+                {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
+                  <MenuItem onClick={() => { setOpen(false); navigate("/provider/vehicles"); }}>
+                    My Vehicles
                   </MenuItem>
                 )}
                 {isAuthenticated && accountType === "ADMIN" && (
