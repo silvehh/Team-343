@@ -29,4 +29,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<Object[]> countAvailableGroupedByStationAndType();
 
     List<Vehicle> findByStationId(Long stationId);
+
+    @Query("SELECT v FROM Vehicle v LEFT JOIN FETCH v.station WHERE v.provider.id = :providerId")
+    List<Vehicle> findByProviderIdWithStation(Long providerId);
+
+    @Query("SELECT v FROM Vehicle v LEFT JOIN FETCH v.station WHERE v.provider.id = :providerId AND v.id = :vehicleId")
+    java.util.Optional<Vehicle> findByIdAndProviderIdWithStation(Long vehicleId, Long providerId);
 }
