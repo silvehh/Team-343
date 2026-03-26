@@ -4,6 +4,9 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router";
+import screenshotLight from "../assets/screenshot-light.png";
+import screenshotDark from "../assets/screenshot-dark.png";
 
 const StyledBox = styled("div")(({ theme }) => ({
   alignSelf: "center",
@@ -16,21 +19,24 @@ const StyledBox = styled("div")(({ theme }) => ({
   border: "1px solid",
   borderColor: (theme.vars || theme).palette.grey[200],
   boxShadow: "0 0 12px 8px hsla(220, 25%, 80%, 0.2)",
-  backgroundImage: `url(${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/screenshots/material-ui/getting-started/templates/dashboard.jpg)`,
+  backgroundImage: `url(${screenshotLight})`,
   backgroundSize: "cover",
+  backgroundPosition: "center",
   [theme.breakpoints.up("sm")]: {
     marginTop: theme.spacing(10),
     height: 700,
   },
   ...theme.applyStyles("dark", {
     boxShadow: "0 0 24px 12px hsla(210, 100%, 25%, 0.2)",
-    backgroundImage: `url(${import.meta.env.TEMPLATE_IMAGE_URL || "https://mui.com"}/static/screenshots/material-ui/getting-started/templates/dashboard-dark.jpg)`,
+    backgroundImage: `url(${screenshotDark})`,
     outlineColor: "hsla(220, 20%, 42%, 0.1)",
     borderColor: (theme.vars || theme).palette.grey[700],
   }),
 }));
 
 export default function Hero() {
+  const navigate = useNavigate();
+
   return (
     <Box
       id="hero"
@@ -106,6 +112,7 @@ export default function Hero() {
               color="primary"
               size="large"
               sx={{ minWidth: "fit-content" }}
+              onClick={() => navigate("/vehicles")}
             >
               Get Started
             </Button>
@@ -114,6 +121,12 @@ export default function Hero() {
               color="primary"
               size="large"
               sx={{ minWidth: "fit-content" }}
+              onClick={() => {
+                const pricingSection = document.getElementById("pricing");
+                if (pricingSection) {
+                  pricingSection.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }}
             >
               Compare Options
             </Button>
