@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router";
 import screenshotLight from "../assets/screenshot-light.png";
 import screenshotDark from "../assets/screenshot-dark.png";
 
@@ -34,6 +35,8 @@ const StyledBox = styled("div")(({ theme }) => ({
 }));
 
 export default function Hero() {
+  const navigate = useNavigate();
+
   return (
     <Box
       id="hero"
@@ -109,6 +112,7 @@ export default function Hero() {
               color="primary"
               size="large"
               sx={{ minWidth: "fit-content" }}
+              onClick={() => navigate("/vehicles")}
             >
               Get Started
             </Button>
@@ -117,6 +121,12 @@ export default function Hero() {
               color="primary"
               size="large"
               sx={{ minWidth: "fit-content" }}
+              onClick={() => {
+                const pricingSection = document.getElementById("pricing");
+                if (pricingSection) {
+                  pricingSection.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }}
             >
               Compare Options
             </Button>
