@@ -6,6 +6,7 @@ import MarketingPage from "./MarketingPage";
 import VehicleBrowsePage from "./pages/VehicleBrowsePage";
 import MyRentalsPage from "./pages/MyRentalsPage";
 import AdminStationsPage from "./pages/AdminStationsPage";
+import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import ParkingPage from "./pages/ParkingPage";
 import TransitPage from "./pages/TransitPage";
 import ProviderVehiclesPage from "./pages/ProviderVehiclesPage";
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/parking" element={<ParkingPage />} />
         <Route path="/transit" element={<TransitPage />} />
         <Route path="/admin/stations" element={<AdminStationsPage />} />
+        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
         <Route path="/provider/vehicles" element={<ProviderVehiclesPage />} />
       </Routes>
     </AppTheme>
