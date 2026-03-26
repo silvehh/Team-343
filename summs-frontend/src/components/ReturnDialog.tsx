@@ -18,6 +18,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { returnRental, type RentalResponse } from "../api/rentals";
 import type { StationResponse } from "../api/stations";
 import type { RootState } from "../store/store";
+import ReturnWarningDialog from "./ReturnWarningDialog";
 
 type ReturnDialogProps = {
   open: boolean;
@@ -43,12 +44,14 @@ function getAvailableSlots(station: StationResponse, vehicleType: string | undef
 export default function ReturnDialog({ open, rental, stations, onClose, onSuccess }: ReturnDialogProps) {
   const { userId } = useSelector((state: RootState) => state.auth);
   const [selectedStationId, setSelectedStationId] = React.useState<number | null>(null);
+  const [warningOpen, setWarningOpen] = React.useState(false);
   const [phase, setPhase] = React.useState<"select" | "processing" | "success" | "error">("select");
   const [errorMessage, setErrorMessage] = React.useState("");
 
   React.useEffect(() => {
     if (open) {
       setSelectedStationId(null);
+      setWarningOpen(false);
       setPhase("select");
       setErrorMessage("");
     }
@@ -57,6 +60,7 @@ export default function ReturnDialog({ open, rental, stations, onClose, onSucces
   const handleReturn = async () => {
     if (!userId || !selectedStationId || !rental.id) return;
 
+    setWarningOpen(false);
     setPhase("processing");
     try {
       await returnRental(rental.id, userId, selectedStationId);
@@ -71,9 +75,11 @@ export default function ReturnDialog({ open, rental, stations, onClose, onSucces
   };
 
   const vehicleTypeName = rental.vehicleType ?? "Vehicle";
+  const selectedStation = stations.find((station) => station.id === selectedStationId);
 
   return (
-    <Dialog open={open} onClose={phase === "processing" ? undefined : onClose} fullWidth maxWidth="sm">
+    <>
+    <Dialog open={open} onClose={phase === "processing" || warningOpen ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle>Return {vehicleTypeName} to a Station</DialogTitle>
       <DialogContent>
         {phase === "select" && (
@@ -136,9 +142,9 @@ export default function ReturnDialog({ open, rental, stations, onClose, onSucces
             <Button
               variant="contained"
               disabled={!selectedStationId}
-              onClick={handleReturn}
+              onClick={() => setWarningOpen(true)}
             >
-              Confirm Return
+              Continue
             </Button>
           </>
         )}
@@ -147,5 +153,15 @@ export default function ReturnDialog({ open, rental, stations, onClose, onSucces
         )}
       </DialogActions>
     </Dialog>
+
+    <ReturnWarningDialog
+      open={warningOpen}
+      processing={phase === "processing"}
+      vehicleTypeName={vehicleTypeName}
+      selectedStationName={selectedStation?.name ?? "No station selected"}
+      onClose={() => setWarningOpen(false)}
+      onConfirm={handleReturn}
+    />
+    </>
   );
 }
