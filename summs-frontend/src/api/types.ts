@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/provider/vehicles/{vehicleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateVehicle"];
+        post?: never;
+        delete: operations["deleteVehicle"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/stations/{id}": {
         parameters: {
             query?: never;
@@ -62,6 +78,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["returnRental"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/provider/vehicles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getProviderVehicles"];
+        put?: never;
+        post: operations["addVehicle"];
         delete?: never;
         options?: never;
         head?: never;
@@ -132,6 +164,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/transit/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all transit routes */
+        get: operations["getAllRoutes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transit/routes/{routeId}/stops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get stops for a specific route */
+        get: operations["getStopsByRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stations": {
         parameters: {
             query?: never;
@@ -164,6 +230,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all parking spots */
+        get: operations["getAllParkingSpots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -175,6 +274,31 @@ export interface components {
              * @example Email is already registered
              */
             message?: string;
+        };
+        /** @description Request to add or update a vehicle by a mobility provider */
+        ProviderVehicleRequest: {
+            /** @description Vehicle type: CAR, BIKE, or SCOOTER */
+            vehicleType?: string;
+            /**
+             * Format: int64
+             * @description Station ID where the vehicle will be placed
+             */
+            stationId?: number;
+            /** @description Price per hour for renting this vehicle */
+            pricePerHour?: number;
+        };
+        /** @description Available vehicle details */
+        VehicleResponse: {
+            /** Format: int64 */
+            id?: number;
+            vehicleType?: string;
+            providerName?: string;
+            /** Format: int64 */
+            providerId?: number;
+            pricePerHour?: number;
+            /** Format: int64 */
+            stationId?: number;
+            stationName?: string;
         };
         /** @description Request to create or update a station */
         StationRequest: {
@@ -283,18 +407,109 @@ export interface components {
             email?: string;
             password?: string;
         };
-        /** @description Available vehicle details */
-        VehicleResponse: {
+        /** @description Transit route details */
+        TransitRouteResponse: {
             /** Format: int64 */
             id?: number;
-            vehicleType?: string;
-            providerName?: string;
+            routeNumber?: string;
+            routeName?: string;
+            transitType?: string;
+            startStation?: string;
+            endStation?: string;
+            /** Format: int32 */
+            frequencyMinutes?: number;
+            /** Format: int32 */
+            currentDelayMinutes?: number;
+            /** Format: int32 */
+            currentCapacityPercent?: number;
+            /** Format: int32 */
+            reliabilityScore?: number;
+            operatingHours?: string;
+            isActive?: boolean;
+        };
+        /** @description Transit stop details */
+        TransitStopResponse: {
             /** Format: int64 */
-            providerId?: number;
+            id?: number;
+            name?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            /** Format: int64 */
+            routeId?: number;
+            routeNumber?: string;
+            /** Format: int32 */
+            stopOrder?: number;
+            nextArrival?: string;
+        };
+        /** @description Parking spot details */
+        ParkingSpotResponse: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            address?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            parkingType?: string;
+            /** Format: int32 */
+            totalSpots?: number;
+            /** Format: int32 */
+            availableSpots?: number;
+            /** Format: double */
             pricePerHour?: number;
+            status?: string;
+            operatingHours?: string;
+            hasEvCharging?: boolean;
+            hasDisabledAccess?: boolean;
+        };
+        AdminAnalyticsSummaryResponse: {
             /** Format: int64 */
-            stationId?: number;
-            stationName?: string;
+            totalRegisteredUsers?: number;
+            /** Format: int64 */
+            completedTrips?: number;
+            rentalVehicleUsage?: components["schemas"]["VehicleUsageResponse"];
+            /** Format: double */
+            bikeToScooterUsageRatio?: number;
+            activeRentalsByCity?: components["schemas"]["CityCountResponse"][];
+            parkingUtilizationByCity?: components["schemas"]["ParkingUtilizationResponse"][];
+            transitServiceSummary?: components["schemas"]["TransitServiceSummaryResponse"];
+            /** Format: date-time */
+            generatedAt?: string;
+        };
+        CityCountResponse: {
+            city?: string;
+            /** Format: int64 */
+            count?: number;
+        };
+        ParkingUtilizationResponse: {
+            city?: string;
+            /** Format: int32 */
+            totalSpots?: number;
+            /** Format: int32 */
+            availableSpots?: number;
+            /** Format: double */
+            utilizationPercent?: number;
+        };
+        TransitServiceSummaryResponse: {
+            /** Format: int64 */
+            activeRoutes?: number;
+            /** Format: int64 */
+            delayedRoutes?: number;
+            /** Format: double */
+            averageDelayMinutes?: number;
+            /** Format: double */
+            averageCapacityPercent?: number;
+        };
+        VehicleUsageResponse: {
+            /** Format: int64 */
+            cars?: number;
+            /** Format: int64 */
+            bikes?: number;
+            /** Format: int64 */
+            scooters?: number;
         };
     };
     responses: never;
@@ -305,6 +520,148 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    updateVehicle: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+                "X-User-Id": number;
+            };
+            path: {
+                vehicleId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderVehicleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VehicleResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteVehicle: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+                "X-User-Id": number;
+            };
+            path: {
+                vehicleId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     updateStation: {
         parameters: {
             query?: never;
@@ -722,6 +1079,146 @@ export interface operations {
             };
         };
     };
+    getProviderVehicles: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+                "X-User-Id": number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VehicleResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    addVehicle: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+                "X-User-Id": number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderVehicleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VehicleResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     signup: {
         parameters: {
             query?: never;
@@ -1066,6 +1563,141 @@ export interface operations {
             };
         };
     };
+    getAllRoutes: {
+        parameters: {
+            query?: {
+                type?: string;
+                activeOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransitRouteResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getStopsByRoute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                routeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TransitStopResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     getAllStations_1: {
         parameters: {
             query?: never;
@@ -1149,6 +1781,141 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Sample"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getAllParkingSpots: {
+        parameters: {
+            query?: {
+                type?: string;
+                availableOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParkingSpotResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getSummary: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminAnalyticsSummaryResponse"];
                 };
             };
             /** @description Bad Request */

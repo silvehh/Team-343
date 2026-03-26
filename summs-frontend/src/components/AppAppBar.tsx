@@ -44,7 +44,9 @@ export default function AppAppBar() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { username, isAuthenticated, accountType } = useSelector((state: RootState) => state.auth);
+  const { username, isAuthenticated, accountType } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -64,7 +66,12 @@ export default function AppAppBar() {
     navigate("/");
   };
 
-  const handleAuthSuccess = (payload: { userId: number; username: string; email: string; accountType: string }) => {
+  const handleAuthSuccess = (payload: {
+    userId: number;
+    username: string;
+    email: string;
+    accountType: string;
+  }) => {
     dispatch(login(payload));
   };
 
@@ -84,33 +91,76 @@ export default function AppAppBar() {
           <Box
             sx={{ flexGrow: 1, display: "flex", alignItems: "center", px: 0 }}
           >
-            <Box sx={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => navigate("/")}>
+            <Box
+              sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              onClick={() => navigate("/")}
+            >
               <Sitemark />
             </Box>
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
-              <Button variant="text" color="info" size="small" onClick={() => navigate("/vehicles")}>
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => navigate("/vehicles")}
+              >
                 Browse Vehicles
               </Button>
-              <Button variant="text" color="info" size="small" onClick={() => navigate("/parking")}>
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => navigate("/parking")}
+              >
                 Parking
               </Button>
-              <Button variant="text" color="info" size="small" onClick={() => navigate("/transit")}>
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                onClick={() => navigate("/transit")}
+              >
                 Transit
               </Button>
               {isAuthenticated && accountType !== "ADMIN" && (
-                <Button variant="text" color="info" size="small" onClick={() => navigate("/rentals")}>
+                <Button
+                  variant="text"
+                  color="info"
+                  size="small"
+                  onClick={() => navigate("/rentals")}
+                >
                   My Rentals
                 </Button>
               )}
               {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
-                <Button variant="text" color="info" size="small" onClick={() => navigate("/provider/vehicles")}>
+                <Button
+                  variant="text"
+                  color="info"
+                  size="small"
+                  onClick={() => navigate("/provider/vehicles")}
+                >
                   My Vehicles
                 </Button>
               )}
               {isAuthenticated && accountType === "ADMIN" && (
-                <Button variant="text" color="info" size="small" onClick={() => navigate("/admin/stations")}>
-                  Manage Stations
-                </Button>
+                <>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    onClick={() => navigate("/admin/stations")}
+                  >
+                    Manage Stations
+                  </Button>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    onClick={() => navigate("/admin/analytics")}
+                  >
+                    Analytics
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
@@ -123,19 +173,38 @@ export default function AppAppBar() {
           >
             {isAuthenticated ? (
               <>
-                <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ px: 1 }}
+                >
                   {username}
                 </Typography>
-                <Button color="primary" variant="outlined" size="small" onClick={handleLogout}>
+                <Button
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                  onClick={handleLogout}
+                >
                   Log out
                 </Button>
               </>
             ) : (
               <>
-                <Button color="primary" variant="text" size="small" onClick={() => openAuthDialog("signin")}>
+                <Button
+                  color="primary"
+                  variant="text"
+                  size="small"
+                  onClick={() => openAuthDialog("signin")}
+                >
                   Sign in
                 </Button>
-                <Button color="primary" variant="contained" size="small" onClick={() => openAuthDialog("signup")}>
+                <Button
+                  color="primary"
+                  variant="contained"
+                  size="small"
+                  onClick={() => openAuthDialog("signup")}
+                >
                   Sign up
                 </Button>
               </>
@@ -169,34 +238,79 @@ export default function AppAppBar() {
                   </IconButton>
                 </Box>
 
-                <MenuItem onClick={() => { setOpen(false); navigate("/vehicles"); }}>
+                <MenuItem
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/vehicles");
+                  }}
+                >
                   Browse Vehicles
                 </MenuItem>
-                <MenuItem onClick={() => { setOpen(false); navigate("/parking"); }}>
+                <MenuItem
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/parking");
+                  }}
+                >
                   Parking
                 </MenuItem>
-                <MenuItem onClick={() => { setOpen(false); navigate("/transit"); }}>
+                <MenuItem
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/transit");
+                  }}
+                >
                   Transit
                 </MenuItem>
                 {isAuthenticated && accountType !== "ADMIN" && (
-                  <MenuItem onClick={() => { setOpen(false); navigate("/rentals"); }}>
+                  <MenuItem
+                    onClick={() => {
+                      setOpen(false);
+                      navigate("/rentals");
+                    }}
+                  >
                     My Rentals
                   </MenuItem>
                 )}
                 {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
-                  <MenuItem onClick={() => { setOpen(false); navigate("/provider/vehicles"); }}>
+                  <MenuItem
+                    onClick={() => {
+                      setOpen(false);
+                      navigate("/provider/vehicles");
+                    }}
+                  >
                     My Vehicles
                   </MenuItem>
                 )}
                 {isAuthenticated && accountType === "ADMIN" && (
-                  <MenuItem onClick={() => { setOpen(false); navigate("/admin/stations"); }}>
-                    Manage Stations
-                  </MenuItem>
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        setOpen(false);
+                        navigate("/admin/stations");
+                      }}
+                    >
+                      Manage Stations
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setOpen(false);
+                        navigate("/admin/analytics");
+                      }}
+                    >
+                      Analytics
+                    </MenuItem>
+                  </>
                 )}
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
                   {isAuthenticated ? (
-                    <Button color="primary" variant="outlined" fullWidth onClick={handleLogout}>
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      fullWidth
+                      onClick={handleLogout}
+                    >
                       Log out
                     </Button>
                   ) : (
