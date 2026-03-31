@@ -21,6 +21,9 @@ public class ProviderAnalyticsSummaryResponse {
   /** Rental activity and usage statistics. */
   private RentalActivityResponse rentalActivity;
 
+  /** Profitability and efficiency metrics. */
+  private EfficiencyMetricsResponse efficiencyMetrics;
+
   /** Timestamp when this analytics snapshot was generated. */
   private LocalDateTime generatedAt;
 }

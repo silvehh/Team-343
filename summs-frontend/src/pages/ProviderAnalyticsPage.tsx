@@ -312,12 +312,49 @@ export default function ProviderAnalyticsPage() {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
 
-      {/* Fleet Utilization */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card variant="outlined">
+          <Card variant="outlined" sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                Fleet Efficiency
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Revenue per Vehicle
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(data?.efficiencyMetrics?.revenuePerVehicle ?? 0)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Total revenue ÷ fleet size
+                  </Typography>
+                </Box>
+
+                <Divider />
+
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Avg. Rentals per Vehicle
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {(data?.efficiencyMetrics?.averageRentalFrequencyPerVehicle ?? 0).toFixed(1)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Utilization metric
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Fleet Overview */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent>
               <Stack
                 direction="row"
@@ -403,9 +440,12 @@ export default function ProviderAnalyticsPage() {
             </CardContent>
           </Card>
         </Grid>
+      </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card variant="outlined">
+      {/* Availability Rate */}
+      <Grid container sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12 }} >
+          <Card variant="outlined" sx={{ width: "100%" }}>
             <CardContent>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
                 Availability Rate
@@ -435,7 +475,7 @@ export default function ProviderAnalyticsPage() {
       </Grid>
 
       {/* Fleet Breakdown by Type */}
-      <Grid container spacing={2}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12 }}>
           <Card variant="outlined">
             <CardContent>
@@ -482,16 +522,6 @@ export default function ProviderAnalyticsPage() {
                     </Typography>
                   </Box>
                 </Stack>
-
-                {(fleet?.availableBikes ?? 0) > 0 &&
-                  (fleet?.availableScooters ?? 0) > 0 && (
-                    <>
-                      <Divider />
-                      <Typography variant="caption" color="text.secondary">
-                        Bike to Scooter Rental Ratio: {formatRatio(bikeToScooterRatio)}
-                      </Typography>
-                    </>
-                  )}
               </Stack>
             </CardContent>
           </Card>

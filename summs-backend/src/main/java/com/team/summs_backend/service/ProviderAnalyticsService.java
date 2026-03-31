@@ -12,6 +12,7 @@ import com.team.summs_backend.dto.FleetUtilizationResponse;
 import com.team.summs_backend.dto.ProviderAnalyticsSummaryResponse;
 import com.team.summs_backend.dto.RentalActivityResponse;
 import com.team.summs_backend.dto.RevenueResponse;
+import com.team.summs_backend.dto.EfficiencyMetricsResponse;
 import com.team.summs_backend.model.MobilityProvider;
 import com.team.summs_backend.model.Rental;
 import com.team.summs_backend.model.RentalStatus;
@@ -44,11 +45,13 @@ public class ProviderAnalyticsService {
     RevenueResponse revenue = computeRevenue(providerId);
     FleetUtilizationResponse fleetUtilization = computeFleetUtilization(providerId);
     RentalActivityResponse rentalActivity = computeRentalActivity(providerId);
+    EfficiencyMetricsResponse efficiencyMetrics = computeEfficiencyMetrics(providerId, revenue, fleetUtilization, rentalActivity);
 
     return new ProviderAnalyticsSummaryResponse(
         revenue,
         fleetUtilization,
         rentalActivity,
+        efficiencyMetrics,
         LocalDateTime.now());
   }
 
@@ -200,5 +203,85 @@ public class ProviderAnalyticsService {
         completedScooterRentals,
         averageDuration,
         bikeToScooterRatio);
+  }
+
+  private EfficiencyMetricsResponse computeEfficiencyMetrics(
+      Long providerId,
+      RevenueResponse revenue,
+      FleetUtilizationResponse fleetUtilization,
+      RentalActivityResponse rentalActivity) {
+
+    List<Rental> completedRentals = rentalRepository.findByProviderIdAndStatus(providerId, RentalStatus.RETURNED);
+
+    // Calculate average revenue per rental
+    BigDecimal averageRevenuePerRental = BigDecimal.ZERO;
+    if (completedRentals.size() > 0) {
+      averageRevenuePerRental = revenue.getTotalRevenue()
+          .divide(BigDecimal.valueOf(completedRentals.size()), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    // Calculate average revenue per rental by type
+    BigDecimal averageCarRentalRevenue = BigDecimal.ZERO;
+    if (rentalActivity.getCompletedCarRentals() > 0) {
+      averageCarRentalRevenue = revenue.getCarRevenue()
+          .divide(BigDecimal.valueOf(rentalActivity.getCompletedCarRentals()), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    BigDecimal averageBikeRentalRevenue = BigDecimal.ZERO;
+    if (rentalActivity.getCompletedBikeRentals() > 0) {
+      averageBikeRentalRevenue = revenue.getBikeRevenue()
+          .divide(BigDecimal.valueOf(rentalActivity.getCompletedBikeRentals()), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    BigDecimal averageScooterRentalRevenue = BigDecimal.ZERO;
+    if (rentalActivity.getCompletedScooterRentals() > 0) {
+      averageScooterRentalRevenue = revenue.getScooterRevenue()
+          .divide(BigDecimal.valueOf(rentalActivity.getCompletedScooterRentals()), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    // Calculate revenue per vehicle
+    BigDecimal revenuePerVehicle = BigDecimal.ZERO;
+    if (fleetUtilization.getTotalVehicles() > 0) {
+      revenuePerVehicle = revenue.getTotalRevenue()
+          .divide(BigDecimal.valueOf(fleetUtilization.getTotalVehicles()), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    // Calculate average rental frequency per vehicle
+    double averageRentalFrequencyPerVehicle = 0.0;
+    if (fleetUtilization.getTotalVehicles() > 0) {
+      averageRentalFrequencyPerVehicle = (double) completedRentals.size() / fleetUtilization.getTotalVehicles();
+    }
+
+    // Calculate revenue percentages by type
+    BigDecimal totalRevenue = revenue.getTotalRevenue();
+    double carRevenuePercentage = 0.0;
+    double bikeRevenuePercentage = 0.0;
+    double scooterRevenuePercentage = 0.0;
+
+    if (totalRevenue.compareTo(BigDecimal.ZERO) > 0) {
+      carRevenuePercentage = revenue.getCarRevenue()
+          .divide(totalRevenue, 4, java.math.RoundingMode.HALF_UP)
+          .multiply(BigDecimal.valueOf(100))
+          .doubleValue();
+      bikeRevenuePercentage = revenue.getBikeRevenue()
+          .divide(totalRevenue, 4, java.math.RoundingMode.HALF_UP)
+          .multiply(BigDecimal.valueOf(100))
+          .doubleValue();
+      scooterRevenuePercentage = revenue.getScooterRevenue()
+          .divide(totalRevenue, 4, java.math.RoundingMode.HALF_UP)
+          .multiply(BigDecimal.valueOf(100))
+          .doubleValue();
+    }
+
+    return new EfficiencyMetricsResponse(
+        averageRevenuePerRental,
+        averageCarRentalRevenue,
+        averageBikeRentalRevenue,
+        averageScooterRentalRevenue,
+        revenuePerVehicle,
+        averageRentalFrequencyPerVehicle,
+        carRevenuePercentage,
+        bikeRevenuePercentage,
+        scooterRevenuePercentage);
   }
 }

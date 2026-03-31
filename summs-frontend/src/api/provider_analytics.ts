@@ -30,10 +30,23 @@ export interface RentalActivityResponse {
   bikeToScooterRatioIfMultiType: number;
 }
 
+export interface EfficiencyMetricsResponse {
+  averageRevenuePerRental: number;
+  averageCarRentalRevenue: number;
+  averageBikeRentalRevenue: number;
+  averageScooterRentalRevenue: number;
+  revenuePerVehicle: number;
+  averageRentalFrequencyPerVehicle: number;
+  carRevenuePercentage: number;
+  bikeRevenuePercentage: number;
+  scooterRevenuePercentage: number;
+}
+
 export interface ProviderAnalyticsSummaryResponse {
   revenue: RevenueResponse;
   fleetUtilization: FleetUtilizationResponse;
   rentalActivity: RentalActivityResponse;
+  efficiencyMetrics: EfficiencyMetricsResponse;
   generatedAt: string;
 }
 
