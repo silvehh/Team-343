@@ -133,14 +133,24 @@ export default function AppAppBar() {
                 </Button>
               )}
               {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
-                <Button
-                  variant="text"
-                  color="info"
-                  size="small"
-                  onClick={() => navigate("/provider/vehicles")}
-                >
-                  My Vehicles
-                </Button>
+                <>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    onClick={() => navigate("/provider/vehicles")}
+                  >
+                    My Vehicles
+                  </Button>
+                  <Button
+                    variant="text"
+                    color="info"
+                    size="small"
+                    onClick={() => navigate("/provider/analytics")}
+                  >
+                    Analytics
+                  </Button>
+                </>
               )}
               {isAuthenticated && accountType === "ADMIN" && (
                 <>
@@ -273,14 +283,24 @@ export default function AppAppBar() {
                   </MenuItem>
                 )}
                 {isAuthenticated && accountType === "MOBILITY_PROVIDER" && (
-                  <MenuItem
-                    onClick={() => {
-                      setOpen(false);
-                      navigate("/provider/vehicles");
-                    }}
-                  >
-                    My Vehicles
-                  </MenuItem>
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        setOpen(false);
+                        navigate("/provider/vehicles");
+                      }}
+                    >
+                      My Vehicles
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setOpen(false);
+                        navigate("/provider/analytics");
+                      }}
+                    >
+                      Analytics
+                    </MenuItem>
+                  </>
                 )}
                 {isAuthenticated && accountType === "ADMIN" && (
                   <>
