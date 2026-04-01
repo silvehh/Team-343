@@ -38,6 +38,7 @@ import {
   createAnalyticsState,
   type AdminFluxState,
 } from "../admin-analytics/flux";
+import { SAMPLE_PARKING_SPOTS, computeParkingUtilizationByCity } from "../utilities/parkingData";
 
 function formatRatio(r: number) {
   if (!Number.isFinite(r)) return "-";
@@ -138,6 +139,8 @@ export default function AdminAnalyticsPage() {
   const carsPct = totalUsage > 0 ? (vehicleUsage?.cars ?? 0) / totalUsage : 0;
   const scootersPct =
     totalUsage > 0 ? (vehicleUsage?.scooters ?? 0) / totalUsage : 0;
+
+  const parkingUtilization = computeParkingUtilizationByCity(SAMPLE_PARKING_SPOTS);
 
   function downloadFile(name: string, mime: string, content: string) {
     const blob = new Blob([content], { type: mime });
@@ -476,7 +479,7 @@ export default function AdminAnalyticsPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {(data?.parkingUtilizationByCity ?? [])
+                  {parkingUtilization
                     .slice(0, 10)
                     .map((row, idx) => (
                       <TableRow key={`${row.city ?? "city"}-${idx}`}>
@@ -491,7 +494,7 @@ export default function AdminAnalyticsPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  {(data?.parkingUtilizationByCity?.length ?? 0) === 0 && (
+                  {parkingUtilization.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={3}>
                         <Typography variant="body2" color="text.secondary">
@@ -555,10 +558,10 @@ export default function AdminAnalyticsPage() {
               </Button>
               <Button
                 variant="outlined"
-                disabled={!data}
+                disabled={parkingUtilization.length === 0}
                 onClick={() => {
-                  if (!data) return;
-                  const rows = (data.parkingUtilizationByCity ?? []).map(
+                  if (parkingUtilization.length === 0) return;
+                  const rows = parkingUtilization.map(
                     (r) => ({
                       city: r.city ?? "Unknown",
                       utilizationPercent: r.utilizationPercent ?? 0,
