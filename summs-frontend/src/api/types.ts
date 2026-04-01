@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/provider/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getProviderSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/stations/{id}": {
         parameters: {
             query?: never;
@@ -478,6 +494,82 @@ export interface components {
             transitServiceSummary?: components["schemas"]["TransitServiceSummaryResponse"];
             /** Format: date-time */
             generatedAt?: string;
+        };
+        ProviderAnalyticsSummaryResponse: {
+            revenue?: components["schemas"]["RevenueResponse"];
+            fleetUtilization?: components["schemas"]["FleetUtilizationResponse"];
+            rentalActivity?: components["schemas"]["RentalActivityResponse"];
+            efficiencyMetrics?: components["schemas"]["EfficiencyMetricsResponse"];
+            /** Format: date-time */
+            generatedAt?: string;
+        };
+        RevenueResponse: {
+            /** Format: double */
+            totalRevenue?: number;
+            /** Format: double */
+            carRevenue?: number;
+            /** Format: double */
+            bikeRevenue?: number;
+            /** Format: double */
+            scooterRevenue?: number;
+        };
+        FleetUtilizationResponse: {
+            /** Format: int64 */
+            totalVehicles?: number;
+            /** Format: int64 */
+            availableVehicles?: number;
+            /** Format: int64 */
+            rentedVehicles?: number;
+            /** Format: double */
+            availabilityRate?: number;
+            /** Format: int64 */
+            availableCars?: number;
+            /** Format: int64 */
+            availableBikes?: number;
+            /** Format: int64 */
+            availableScooters?: number;
+            /** Format: int64 */
+            rentedCars?: number;
+            /** Format: int64 */
+            rentedBikes?: number;
+            /** Format: int64 */
+            rentedScooters?: number;
+        };
+        RentalActivityResponse: {
+            /** Format: int64 */
+            completedRentals?: number;
+            /** Format: int64 */
+            activeRentals?: number;
+            /** Format: int64 */
+            completedCarRentals?: number;
+            /** Format: int64 */
+            completedBikeRentals?: number;
+            /** Format: int64 */
+            completedScooterRentals?: number;
+            /** Format: double */
+            averageRentalDurationMinutes?: number;
+            /** Format: double */
+            bikeToScooterRatioIfMultiType?: number;
+        };
+        EfficiencyMetricsResponse: {
+            /** Format: double */
+            averageRevenuePerRental?: number;
+            /** Format: double */
+            averageCarRentalRevenue?: number;
+            /** Format: double */
+            averageBikeRentalRevenue?: number;
+            /** Format: double */
+            averageScooterRentalRevenue?: number;
+            /** Format: double */
+            revenuePerVehicle?: number;
+            /** Format: double */
+            averageRentalFrequencyPerVehicle?: number;
+            /** Format: double */
+            carRevenuePercentage?: number;
+            /** Format: double */
+            bikeRevenuePercentage?: number;
+            /** Format: double */
+            scooterRevenuePercentage?: number;
         };
         CityCountResponse: {
             city?: string;
@@ -1916,6 +2008,74 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AdminAnalyticsSummaryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getProviderSummary: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Account-Type": string;
+                "X-User-Id": number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProviderAnalyticsSummaryResponse"];
                 };
             };
             /** @description Bad Request */
