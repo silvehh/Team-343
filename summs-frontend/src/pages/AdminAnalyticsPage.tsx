@@ -39,6 +39,7 @@ import {
   type AdminFluxState,
 } from "../admin-analytics/flux";
 import { SAMPLE_PARKING_SPOTS, computeParkingUtilizationByCity } from "../utilities/parkingData";
+import { SAMPLE_TRANSIT_ROUTES, computeTransitServiceSummary } from "../utilities/transitData";
 
 function formatRatio(r: number) {
   if (!Number.isFinite(r)) return "-";
@@ -141,6 +142,7 @@ export default function AdminAnalyticsPage() {
     totalUsage > 0 ? (vehicleUsage?.scooters ?? 0) / totalUsage : 0;
 
   const parkingUtilization = computeParkingUtilizationByCity(SAMPLE_PARKING_SPOTS);
+  const transitSummary = computeTransitServiceSummary(SAMPLE_TRANSIT_ROUTES);
 
   function downloadFile(name: string, mime: string, content: string) {
     const blob = new Blob([content], { type: mime });
@@ -348,13 +350,11 @@ export default function AdminAnalyticsPage() {
               </Typography>
             </Stack>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
-              {data?.transitServiceSummary?.delayedRoutes ?? "-"}
+              {transitSummary.delayedRoutes}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Avg delay:{" "}
-              {data?.transitServiceSummary
-                ? `${data.transitServiceSummary.averageDelayMinutes} min`
-                : "-"}
+              {`${transitSummary.averageDelayMinutes} min`}
             </Typography>
           </CardContent>
         </Card>
@@ -378,19 +378,14 @@ export default function AdminAnalyticsPage() {
                     <LinearProgress
                       color="info"
                       variant="determinate"
-                      value={clampPercent(
-                        data?.transitServiceSummary?.averageCapacityPercent ??
-                          0,
-                      )}
+                      value={clampPercent(transitSummary.averageCapacityPercent)}
                     />
                   </Box>
                   <Typography
                     variant="body2"
                     sx={{ width: 64, textAlign: "right" }}
                   >
-                    {data?.transitServiceSummary
-                      ? `${clampPercent(data.transitServiceSummary.averageCapacityPercent ?? 0).toFixed(0)}%`
-                      : "-"}
+                    {`${clampPercent(transitSummary.averageCapacityPercent).toFixed(0)}%`}
                   </Typography>
                 </Stack>
               </Box>
@@ -400,7 +395,7 @@ export default function AdminAnalyticsPage() {
                   Active routes
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  {data?.transitServiceSummary?.activeRoutes ?? "-"}
+                  {transitSummary.activeRoutes}
                 </Typography>
               </Box>
             </Stack>

@@ -20,122 +20,7 @@ import StarIcon from "@mui/icons-material/Star";
 import WarningIcon from "@mui/icons-material/Warning";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { fetchTransitRoutes, type TransitRouteResponse } from "../api/transit";
-
-// Hard-coded sample data for demonstration
-const SAMPLE_TRANSIT_ROUTES: TransitRouteResponse[] = [
-  {
-    id: 1,
-    routeNumber: "747",
-    routeName: "YUL Aéroport Montréal-Trudeau / Centre-Ville",
-    transitType: "BUS",
-    startStation: "Aéroport Montréal-Trudeau",
-    endStation: "Gare d'autocars de Montréal",
-    frequencyMinutes: 10,
-    currentDelayMinutes: 0,
-    currentCapacityPercent: 45,
-    reliabilityScore: 92,
-    operatingHours: "24/7",
-    isActive: true,
-  },
-  {
-    id: 2,
-    routeNumber: "Orange",
-    routeName: "Ligne Orange",
-    transitType: "METRO",
-    startStation: "Côte-Vertu",
-    endStation: "Montmorency",
-    frequencyMinutes: 4,
-    currentDelayMinutes: 2,
-    currentCapacityPercent: 78,
-    reliabilityScore: 88,
-    operatingHours: "5:30 AM - 1:00 AM",
-    isActive: true,
-  },
-  {
-    id: 3,
-    routeNumber: "Green",
-    routeName: "Ligne Verte",
-    transitType: "METRO",
-    startStation: "Angrignon",
-    endStation: "Honoré-Beaugrand",
-    frequencyMinutes: 5,
-    currentDelayMinutes: 0,
-    currentCapacityPercent: 65,
-    reliabilityScore: 91,
-    operatingHours: "5:30 AM - 1:00 AM",
-    isActive: true,
-  },
-  {
-    id: 4,
-    routeNumber: "A",
-    routeName: "REM - Ligne A",
-    transitType: "REM",
-    startStation: "Gare Centrale",
-    endStation: "Bois-Franc",
-    frequencyMinutes: 5,
-    currentDelayMinutes: 0,
-    currentCapacityPercent: 35,
-    reliabilityScore: 98,
-    operatingHours: "5:00 AM - 12:30 AM",
-    isActive: true,
-  },
-  {
-    id: 5,
-    routeNumber: "61",
-    routeName: "Wellington",
-    transitType: "BUS",
-    startStation: "Station Angrignon",
-    endStation: "Square Victoria",
-    frequencyMinutes: 12,
-    currentDelayMinutes: 5,
-    currentCapacityPercent: 55,
-    reliabilityScore: 75,
-    operatingHours: "6:00 AM - 11:00 PM",
-    isActive: true,
-  },
-  {
-    id: 6,
-    routeNumber: "Exo4",
-    routeName: "Candiac - Gare Centrale",
-    transitType: "TRAIN",
-    startStation: "Candiac",
-    endStation: "Gare Centrale",
-    frequencyMinutes: 30,
-    currentDelayMinutes: 8,
-    currentCapacityPercent: 42,
-    reliabilityScore: 82,
-    operatingHours: "6:00 AM - 9:00 PM",
-    isActive: true,
-  },
-  {
-    id: 7,
-    routeNumber: "Blue",
-    routeName: "Ligne Bleue",
-    transitType: "METRO",
-    startStation: "Snowdon",
-    endStation: "Saint-Michel",
-    frequencyMinutes: 6,
-    currentDelayMinutes: 0,
-    currentCapacityPercent: 40,
-    reliabilityScore: 94,
-    operatingHours: "5:30 AM - 1:00 AM",
-    isActive: true,
-  },
-  {
-    id: 8,
-    routeNumber: "B",
-    routeName: "REM - Rive-Sud",
-    transitType: "REM",
-    startStation: "Gare Centrale",
-    endStation: "Brossard",
-    frequencyMinutes: 4,
-    currentDelayMinutes: 0,
-    currentCapacityPercent: 28,
-    reliabilityScore: 97,
-    operatingHours: "5:00 AM - 12:30 AM",
-    isActive: true,
-  },
-];
+import { SAMPLE_TRANSIT_ROUTES } from "../utilities/transitData";
 
 function getTransitIcon(type: string | undefined) {
   switch (type) {
@@ -188,7 +73,7 @@ export default function TransitPage() {
     try {
       const type = typeFilter !== "ALL" ? typeFilter : undefined;
       let data = await fetchTransitRoutes(type, showActiveOnly);
-      
+
       // Use sample data if no data from backend
       if (data.length === 0) {
         data = SAMPLE_TRANSIT_ROUTES;
@@ -200,7 +85,7 @@ export default function TransitPage() {
           data = data.filter(route => route.isActive);
         }
       }
-      
+
       setRoutes(data);
     } catch (err) {
       console.error("Failed to load transit routes:", err);
@@ -283,8 +168,8 @@ export default function TransitPage() {
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ 
-          display: "grid", 
+        <Box sx={{
+          display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
           gap: 2,
           pb: 2
@@ -293,12 +178,12 @@ export default function TransitPage() {
             const delayStatus = getDelayStatus(route.currentDelayMinutes);
             const reliabilityStatus = getReliabilityLabel(route.reliabilityScore);
             const capacityPercent = route.currentCapacityPercent ?? 0;
-            
+
             return (
-              <Card 
+              <Card
                 key={route.id}
                 elevation={1}
-                sx={{ 
+                sx={{
                   transition: "all 0.2s ease-in-out",
                   borderLeft: 4,
                   borderColor: getTransitColor(route.transitType),
@@ -312,9 +197,9 @@ export default function TransitPage() {
                   {/* Header */}
                   <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                      <Box sx={{ 
-                        p: 1, 
-                        borderRadius: 1, 
+                      <Box sx={{
+                        p: 1,
+                        borderRadius: 1,
                         bgcolor: getTransitColor(route.transitType),
                         color: "white",
                         display: "flex"
@@ -326,10 +211,10 @@ export default function TransitPage() {
                           <Typography variant="h6" sx={{ fontWeight: 700 }}>
                             {route.routeNumber}
                           </Typography>
-                          <Chip 
+                          <Chip
                             label={route.transitType}
                             size="small"
-                            sx={{ 
+                            sx={{
                               bgcolor: getTransitColor(route.transitType),
                               color: "white",
                               fontSize: "0.7rem"
@@ -341,7 +226,7 @@ export default function TransitPage() {
                         </Typography>
                       </Box>
                     </Box>
-                    <Chip 
+                    <Chip
                       icon={route.isActive ? <CheckCircleIcon /> : <WarningIcon />}
                       label={route.isActive ? "Active" : "Inactive"}
                       size="small"
@@ -372,7 +257,7 @@ export default function TransitPage() {
                           Status
                         </Typography>
                       </Box>
-                      <Chip 
+                      <Chip
                         label={delayStatus.label}
                         size="small"
                         color={delayStatus.color}
@@ -402,7 +287,7 @@ export default function TransitPage() {
                         </Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <Chip 
+                        <Chip
                           label={reliabilityStatus.label}
                           size="small"
                           color={reliabilityStatus.color}
@@ -441,9 +326,9 @@ export default function TransitPage() {
                         {capacityPercent}%
                       </Typography>
                     </Box>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={capacityPercent} 
+                    <LinearProgress
+                      variant="determinate"
+                      value={capacityPercent}
                       color={getCapacityColor(capacityPercent)}
                       sx={{ height: 8, borderRadius: 1 }}
                     />
