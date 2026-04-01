@@ -123,6 +123,18 @@ export interface TransitServiceSummary {
   averageCapacityPercent: number;
 }
 
+export interface TransitTypeCount {
+  type: string;
+  count: number;
+}
+
+export interface RoutesByTransitType {
+  BUS: number;
+  METRO: number;
+  REM: number;
+  TRAIN: number;
+}
+
 export function computeTransitServiceSummary(
   routes: TransitRouteResponse[]
 ): TransitServiceSummary {
@@ -158,3 +170,48 @@ export function computeTransitServiceSummary(
     averageCapacityPercent: Math.round(averageCapacityPercent * 10) / 10,
   };
 }
+
+export function computeAverageReliabilityScore(
+  routes: TransitRouteResponse[]
+): number {
+  const activeRoutes = routes.filter((r) => r.isActive);
+  if (activeRoutes.length === 0) return 0;
+
+  const totalReliability = activeRoutes.reduce(
+    (sum, route) => sum + (route.reliabilityScore ?? 0),
+    0
+  );
+  return Math.round((totalReliability / activeRoutes.length) * 10) / 10;
+}
+
+export function computeRoutesByTransitType(
+  routes: TransitRouteResponse[]
+): RoutesByTransitType {
+  const counts: RoutesByTransitType = {
+    BUS: 0,
+    METRO: 0,
+    REM: 0,
+    TRAIN: 0,
+  };
+
+  for (const route of routes) {
+    if (route.isActive) {
+      const type = route.transitType as keyof RoutesByTransitType;
+      if (type in counts) {
+        counts[type]++;
+      }
+    }
+  }
+
+  return counts;
+}
+
+export function computeHighFrequencyRouteCount(
+  routes: TransitRouteResponse[],
+  frequencyThreshold: number = 5
+): number {
+  return routes.filter(
+    (r) => r.isActive && (r.frequencyMinutes ?? Infinity) < frequencyThreshold
+  ).length;
+}
+

@@ -39,7 +39,13 @@ import {
   type AdminFluxState,
 } from "../admin-analytics/flux";
 import { SAMPLE_PARKING_SPOTS, computeParkingUtilizationByCity } from "../utilities/parkingData";
-import { SAMPLE_TRANSIT_ROUTES, computeTransitServiceSummary } from "../utilities/transitData";
+import {
+  SAMPLE_TRANSIT_ROUTES,
+  computeTransitServiceSummary,
+  computeAverageReliabilityScore,
+  computeRoutesByTransitType,
+  computeHighFrequencyRouteCount,
+} from "../utilities/transitData";
 
 function formatRatio(r: number) {
   if (!Number.isFinite(r)) return "-";
@@ -143,6 +149,9 @@ export default function AdminAnalyticsPage() {
 
   const parkingUtilization = computeParkingUtilizationByCity(SAMPLE_PARKING_SPOTS);
   const transitSummary = computeTransitServiceSummary(SAMPLE_TRANSIT_ROUTES);
+  const averageReliability = computeAverageReliabilityScore(SAMPLE_TRANSIT_ROUTES);
+  const routesByType = computeRoutesByTransitType(SAMPLE_TRANSIT_ROUTES);
+  const highFrequencyRoutes = computeHighFrequencyRouteCount(SAMPLE_TRANSIT_ROUTES);
 
   function downloadFile(name: string, mime: string, content: string) {
     const blob = new Blob([content], { type: mime });
@@ -176,7 +185,7 @@ export default function AdminAnalyticsPage() {
   renderRef.current.rentalServiceAnalytics = () => (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -197,7 +206,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -218,7 +227,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -244,7 +253,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Typography
               variant="subtitle2"
@@ -335,8 +344,8 @@ export default function AdminAnalyticsPage() {
 
   renderRef.current.gatewayAnalytics = () => (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card variant="outlined">
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -346,21 +355,95 @@ export default function AdminAnalyticsPage() {
             >
               <DirectionsTransitIcon color="info" />
               <Typography variant="subtitle2" color="text.secondary">
-                Delayed Transit Routes
+                Delayed Routes
               </Typography>
             </Stack>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
               {transitSummary.delayedRoutes}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Avg delay:{" "}
-              {`${transitSummary.averageDelayMinutes} min`}
+              Avg delay: {`${transitSummary.averageDelayMinutes} min`}
             </Typography>
           </CardContent>
         </Card>
       </Grid>
 
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <DoneAllIcon color="success" />
+              <Typography variant="subtitle2" color="text.secondary">
+                Reliability Score
+              </Typography>
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {averageReliability}
+              <Typography variant="caption" sx={{ ml: 0.5 }}>%</Typography>
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Network average
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <CompareArrowsIcon color="secondary" />
+              <Typography variant="subtitle2" color="text.secondary">
+                Active Routes
+              </Typography>
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {transitSummary.activeRoutes}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              High-frequency: {highFrequencyRoutes}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 1 }}
+            >
+              Routes by Type
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚌 Bus: {routesByType.BUS}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚇 Metro: {routesByType.METRO}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚄 REM: {routesByType.REM}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              🚂 Train: {routesByType.TRAIN}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
         <Card variant="outlined">
           <CardContent>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -389,15 +472,6 @@ export default function AdminAnalyticsPage() {
                   </Typography>
                 </Stack>
               </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  Active routes
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  {transitSummary.activeRoutes}
-                </Typography>
-              </Box>
             </Stack>
           </CardContent>
         </Card>
@@ -408,7 +482,7 @@ export default function AdminAnalyticsPage() {
   renderRef.current.cityAnalytics = () => (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
               Active Rentals by City
@@ -449,7 +523,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
