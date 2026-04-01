@@ -11,16 +11,15 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import LinearProgress from "@mui/material/LinearProgress";
 import Alert from "@mui/material/Alert";
-import Paper from "@mui/material/Paper";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import PedalBikeIcon from "@mui/icons-material/PedalBike";
 import ElectricScooterIcon from "@mui/icons-material/ElectricScooter";
-import TimelineIcon from "@mui/icons-material/Timeline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocalParkingIcon from "@mui/icons-material/LocalParking";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import type { RootState, AppDispatch } from "../store/store";
 import { loadProviderAnalyticsSummary } from "../store/providerAnalyticsSlice";
@@ -49,10 +48,42 @@ function clampPercent(n: number) {
   return Math.max(0, Math.min(100, n));
 }
 
-function formatRatio(r: number) {
-  if (!Number.isFinite(r)) return "-";
-  if (r === 0) return "0";
-  return r.toFixed(2);
+function formatDateTime(dateTimeString: string | undefined): string {
+  if (!dateTimeString) return "-";
+  try {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString();
+  } catch {
+    return dateTimeString;
+  }
+}
+
+function downloadFile(name: string, mime: string, content: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toCsv(rows: Array<Record<string, unknown>>): string {
+  if (rows.length === 0) return "";
+  const headers = Object.keys(rows[0]);
+  const escape = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    if (/[\n\r,\"]/g.test(s)) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+  return [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => escape(r[h])).join(",")),
+  ].join("\n");
 }
 
 export default function ProviderAnalyticsPage() {
@@ -103,7 +134,6 @@ export default function ProviderAnalyticsPage() {
   const completedRentals = activity?.completedRentals ?? 0;
   const activeRentals = activity?.activeRentals ?? 0;
   const averageDuration = activity?.averageRentalDurationMinutes ?? 0;
-  const bikeToScooterRatio = activity?.bikeToScooterRatioIfMultiType ?? 0;
 
   const isLoading = analytics.status === "loading";
   const hasError = analytics.status === "failed";
@@ -133,6 +163,11 @@ export default function ProviderAnalyticsPage() {
           <Typography variant="body2" color="text.secondary">
             Monitor your fleet performance and revenue
           </Typography>
+          {data?.generatedAt && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              Updated: {formatDateTime(data.generatedAt)}
+            </Typography>
+          )}
         </Box>
         <Stack direction="row" spacing={1}>
           <Button
@@ -522,6 +557,65 @@ export default function ProviderAnalyticsPage() {
                     </Typography>
                   </Box>
                 </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Export Section */}
+      <Grid container sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
+                Export Data
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => {
+                    const json = JSON.stringify(data, null, 2);
+                    downloadFile(
+                      `provider-analytics-${new Date().toISOString().split("T")[0]}.json`,
+                      "application/json",
+                      json,
+                    );
+                  }}
+                  disabled={!data}
+                >
+                  Download JSON
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => {
+                    const rows = [
+                      {
+                        "Total Revenue": formatCurrency(totalRevenue),
+                        "Completed Rentals": completedRentals,
+                        "Active Rentals": activeRentals,
+                        "Average Duration": formatDuration(averageDuration),
+                        "Total Vehicles": totalVehicles,
+                        "Available Vehicles": availableVehicles,
+                        "Rented Vehicles": rentedVehicles,
+                        "Availability Rate %": availabilityRate.toFixed(1),
+                        "Generated At": data?.generatedAt || new Date().toISOString(),
+                      },
+                    ];
+                    const csv = toCsv(rows);
+                    downloadFile(
+                      `provider-analytics-${new Date().toISOString().split("T")[0]}.csv`,
+                      "text/csv",
+                      csv,
+                    );
+                  }}
+                  disabled={!data}
+                >
+                  Download CSV
+                </Button>
               </Stack>
             </CardContent>
           </Card>
