@@ -581,91 +581,308 @@ export default function AdminAnalyticsPage() {
     </Grid>
   );
 
-  renderRef.current.exportAnalytics = () => (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Export Analytics
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Download the current analytics snapshot (client-side export).
-            </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+  renderRef.current.exportAnalytics = () => {
+    // Build comprehensive export object with all analytics
+    const comprehensiveAnalytics = {
+      apiData: data,
+      computedAnalytics: {
+        rentalVehicles: {
+          cars: vehicleUsage?.cars ?? 0,
+          bikes: vehicleUsage?.bikes ?? 0,
+          scooters: vehicleUsage?.scooters ?? 0,
+          total: totalUsage,
+          distribution: {
+            carsPercent: carsPct * 100,
+            bikesPercent: bikesPct * 100,
+            scootersPercent: scootersPct * 100,
+          },
+        },
+        transitGateway: {
+          delayedRoutes: transitSummary.delayedRoutes,
+          averageDelayMinutes: transitSummary.averageDelayMinutes,
+          activeRoutes: transitSummary.activeRoutes,
+          averageCapacityPercent: transitSummary.averageCapacityPercent,
+          averageReliabilityScore: averageReliability,
+          highFrequencyRoutes: highFrequencyRoutes,
+          routesByType: routesByType,
+        },
+        parking: {
+          byCity: parkingUtilization,
+        },
+      },
+    };
+
+    return (
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" >
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                JSON Export
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Complete analytics snapshot including all computed metrics.
+              </Typography>
               <Button
                 variant="contained"
                 disabled={!data}
+                fullWidth
                 onClick={() => {
-                  if (!data) return;
                   downloadFile(
-                    `admin-analytics-${new Date().toISOString()}.json`,
+                    `admin-analytics-complete-${new Date().toISOString()}.json`,
                     "application/json",
-                    JSON.stringify(data, null, 2),
+                    JSON.stringify(comprehensiveAnalytics, null, 2),
                   );
                 }}
               >
-                Download JSON
+                Download Complete JSON
               </Button>
-              <Button
-                variant="outlined"
-                disabled={!data}
-                onClick={() => {
-                  if (!data) return;
-                  const rows = (data.activeRentalsByCity ?? []).map((r) => ({
-                    city: r.city ?? "Unknown",
-                    activeRentals: r.count ?? 0,
-                  }));
-                  downloadFile(
-                    `active-rentals-by-city-${new Date().toISOString()}.csv`,
-                    "text/csv",
-                    toCsv(rows),
-                  );
-                }}
-              >
-                Active rentals CSV
-              </Button>
-              <Button
-                variant="outlined"
-                disabled={parkingUtilization.length === 0}
-                onClick={() => {
-                  if (parkingUtilization.length === 0) return;
-                  const rows = parkingUtilization.map(
-                    (r) => ({
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                CSV Exports
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Export specific analytics as CSV files.
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  variant="outlined"
+                  disabled={!data}
+                  size="small"
+                  onClick={() => {
+                    if (!data) return;
+                    const rows = (data.activeRentalsByCity ?? []).map((r) => ({
+                      city: r.city ?? "Unknown",
+                      activeRentals: r.count ?? 0,
+                    }));
+                    downloadFile(
+                      `active-rentals-by-city-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Active Rentals by City
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  disabled={parkingUtilization.length === 0}
+                  size="small"
+                  onClick={() => {
+                    if (parkingUtilization.length === 0) return;
+                    const rows = parkingUtilization.map((r) => ({
                       city: r.city ?? "Unknown",
                       utilizationPercent: r.utilizationPercent ?? 0,
                       availableSpots: r.availableSpots ?? 0,
                       totalSpots: r.totalSpots ?? 0,
-                    }),
-                  );
-                  downloadFile(
-                    `parking-utilization-by-city-${new Date().toISOString()}.csv`,
-                    "text/csv",
-                    toCsv(rows),
-                  );
-                }}
-              >
-                Parking CSV
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
+                    }));
+                    downloadFile(
+                      `parking-utilization-by-city-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Parking Utilization by City
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    const rows = [
+                      {
+                        metric: "Total Registered Users",
+                        value: data?.totalRegisteredUsers ?? 0,
+                      },
+                      {
+                        metric: "Completed Trips",
+                        value: data?.completedTrips ?? 0,
+                      },
+                      {
+                        metric: "Bike to Scooter Ratio",
+                        value: data?.bikeToScooterUsageRatio ?? 0,
+                      },
+                      {
+                        metric: "Total Vehicle Rentals",
+                        value: totalUsage,
+                      },
+                      {
+                        metric: "Vehicle: Cars",
+                        value: vehicleUsage?.cars ?? 0,
+                      },
+                      {
+                        metric: "Vehicle: Bikes",
+                        value: vehicleUsage?.bikes ?? 0,
+                      },
+                      {
+                        metric: "Vehicle: Scooters",
+                        value: vehicleUsage?.scooters ?? 0,
+                      },
+                      {
+                        metric: "Active Transit Routes",
+                        value: transitSummary.activeRoutes,
+                      },
+                      {
+                        metric: "Delayed Transit Routes",
+                        value: transitSummary.delayedRoutes,
+                      },
+                      {
+                        metric: "Average Transit Delay (min)",
+                        value: transitSummary.averageDelayMinutes,
+                      },
+                      {
+                        metric: "Average Transit Capacity %",
+                        value: transitSummary.averageCapacityPercent,
+                      },
+                      {
+                        metric: "Average Transit Reliability %",
+                        value: averageReliability,
+                      },
+                      {
+                        metric: "High-Frequency Routes",
+                        value: highFrequencyRoutes,
+                      },
+                      {
+                        metric: "Bus Routes",
+                        value: routesByType.BUS,
+                      },
+                      {
+                        metric: "Metro Routes",
+                        value: routesByType.METRO,
+                      },
+                      {
+                        metric: "REM Routes",
+                        value: routesByType.REM,
+                      },
+                      {
+                        metric: "Train Routes",
+                        value: routesByType.TRAIN,
+                      },
+                    ];
+                    downloadFile(
+                      `analytics-summary-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  All Metrics Summary
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    const rows = [
+                      {
+                        category: "Transit",
+                        metric: "Active Routes",
+                        value: transitSummary.activeRoutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Delayed Routes",
+                        value: transitSummary.delayedRoutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Delay (min)",
+                        value: transitSummary.averageDelayMinutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Capacity %",
+                        value: transitSummary.averageCapacityPercent,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Reliability %",
+                        value: averageReliability,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "High-Freq Routes",
+                        value: highFrequencyRoutes,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Bus",
+                        value: routesByType.BUS,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Metro",
+                        value: routesByType.METRO,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "REM",
+                        value: routesByType.REM,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Train",
+                        value: routesByType.TRAIN,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Cars",
+                        value: vehicleUsage?.cars ?? 0,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Bikes",
+                        value: vehicleUsage?.bikes ?? 0,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Scooters",
+                        value: vehicleUsage?.scooters ?? 0,
+                      },
+                    ];
+                    downloadFile(
+                      `gateway-transit-analytics-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Gateway & Transit Analytics
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                What's Included
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <strong>JSON Export:</strong> Complete snapshot including API data
+                and all computed analytics (rentals, transit gateway, parking).
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>CSV Exports:</strong> Active rentals by city, parking
+                utilization by city, comprehensive metrics summary, and gateway
+                transit analytics.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Export Notes
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Exports are generated from the currently loaded
-              `/api/admin/analytics/summary` response.
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
-  );
+    );
+  };
 
   const selectedTab =
     flux.currentState instanceof CityAnalytics
