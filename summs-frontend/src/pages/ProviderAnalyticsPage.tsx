@@ -22,7 +22,10 @@ import LocalParkingIcon from "@mui/icons-material/LocalParking";
 import DownloadIcon from "@mui/icons-material/Download";
 
 import type { RootState, AppDispatch } from "../store/store";
-import { loadProviderAnalyticsSummary } from "../store/providerAnalyticsSlice";
+import {
+  loadProviderAnalyticsSummary,
+  resetProviderAnalytics,
+} from "../store/providerAnalyticsSlice";
 
 function formatCurrency(value: number) {
   if (!Number.isFinite(value)) return "$0.00";
@@ -102,11 +105,12 @@ export default function ProviderAnalyticsPage() {
       navigate("/");
       return;
     }
-    if (analytics.status === "idle" && userId) {
+    if (userId) {
+      void dispatch(resetProviderAnalytics());
       void dispatch(loadProviderAnalyticsSummary(userId));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isProvider, navigate]);
+  }, [isProvider, userId, navigate]);
 
   if (!isProvider) return null;
 
@@ -131,8 +135,8 @@ export default function ProviderAnalyticsPage() {
   const rentedVehicles = fleet?.rentedVehicles ?? 0;
   const availabilityRate = fleet?.availabilityRate ?? 0;
 
-  const completedRentals = activity?.completedRentals ?? 0;
-  const activeRentals = activity?.activeRentals ?? 0;
+  const completedRentals = activity?.completedRentals ?? "-";
+  const activeRentals = activity?.activeRentals ?? "-";
   const averageDuration = activity?.averageRentalDurationMinutes ?? 0;
 
   const isLoading = analytics.status === "loading";
