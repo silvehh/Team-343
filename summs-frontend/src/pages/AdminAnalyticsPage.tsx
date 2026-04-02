@@ -38,6 +38,14 @@ import {
   createAnalyticsState,
   type AdminFluxState,
 } from "../admin-analytics/flux";
+import { SAMPLE_PARKING_SPOTS, computeParkingUtilizationByCity } from "../utilities/parkingData";
+import {
+  SAMPLE_TRANSIT_ROUTES,
+  computeTransitServiceSummary,
+  computeAverageReliabilityScore,
+  computeRoutesByTransitType,
+  computeHighFrequencyRouteCount,
+} from "../utilities/transitData";
 
 function formatRatio(r: number) {
   if (!Number.isFinite(r)) return "-";
@@ -139,6 +147,12 @@ export default function AdminAnalyticsPage() {
   const scootersPct =
     totalUsage > 0 ? (vehicleUsage?.scooters ?? 0) / totalUsage : 0;
 
+  const parkingUtilization = computeParkingUtilizationByCity(SAMPLE_PARKING_SPOTS);
+  const transitSummary = computeTransitServiceSummary(SAMPLE_TRANSIT_ROUTES);
+  const averageReliability = computeAverageReliabilityScore(SAMPLE_TRANSIT_ROUTES);
+  const routesByType = computeRoutesByTransitType(SAMPLE_TRANSIT_ROUTES);
+  const highFrequencyRoutes = computeHighFrequencyRouteCount(SAMPLE_TRANSIT_ROUTES);
+
   function downloadFile(name: string, mime: string, content: string) {
     const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
@@ -171,7 +185,7 @@ export default function AdminAnalyticsPage() {
   renderRef.current.rentalServiceAnalytics = () => (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -192,7 +206,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -213,7 +227,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -239,7 +253,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 3 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Typography
               variant="subtitle2"
@@ -330,8 +344,8 @@ export default function AdminAnalyticsPage() {
 
   renderRef.current.gatewayAnalytics = () => (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card variant="outlined">
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -341,23 +355,95 @@ export default function AdminAnalyticsPage() {
             >
               <DirectionsTransitIcon color="info" />
               <Typography variant="subtitle2" color="text.secondary">
-                Delayed Transit Routes
+                Delayed Routes
               </Typography>
             </Stack>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
-              {data?.transitServiceSummary?.delayedRoutes ?? "-"}
+              {transitSummary.delayedRoutes}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Avg delay:{" "}
-              {data?.transitServiceSummary
-                ? `${data.transitServiceSummary.averageDelayMinutes} min`
-                : "-"}
+              Avg delay: {`${transitSummary.averageDelayMinutes} min`}
             </Typography>
           </CardContent>
         </Card>
       </Grid>
 
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <DoneAllIcon color="success" />
+              <Typography variant="subtitle2" color="text.secondary">
+                Reliability Score
+              </Typography>
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {averageReliability}
+              <Typography variant="caption" sx={{ ml: 0.5 }}>%</Typography>
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Network average
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <CompareArrowsIcon color="secondary" />
+              <Typography variant="subtitle2" color="text.secondary">
+                Active Routes
+              </Typography>
+            </Stack>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {transitSummary.activeRoutes}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              High-frequency: {highFrequencyRoutes}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Card variant="outlined" sx={{ height: "100%" }}>
+          <CardContent>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 1 }}
+            >
+              Routes by Type
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚌 Bus: {routesByType.BUS}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚇 Metro: {routesByType.METRO}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              🚄 REM: {routesByType.REM}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              🚂 Train: {routesByType.TRAIN}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
         <Card variant="outlined">
           <CardContent>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -375,30 +461,16 @@ export default function AdminAnalyticsPage() {
                     <LinearProgress
                       color="info"
                       variant="determinate"
-                      value={clampPercent(
-                        data?.transitServiceSummary?.averageCapacityPercent ??
-                          0,
-                      )}
+                      value={clampPercent(transitSummary.averageCapacityPercent)}
                     />
                   </Box>
                   <Typography
                     variant="body2"
                     sx={{ width: 64, textAlign: "right" }}
                   >
-                    {data?.transitServiceSummary
-                      ? `${clampPercent(data.transitServiceSummary.averageCapacityPercent ?? 0).toFixed(0)}%`
-                      : "-"}
+                    {`${clampPercent(transitSummary.averageCapacityPercent).toFixed(0)}%`}
                   </Typography>
                 </Stack>
-              </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  Active routes
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  {data?.transitServiceSummary?.activeRoutes ?? "-"}
-                </Typography>
               </Box>
             </Stack>
           </CardContent>
@@ -410,7 +482,7 @@ export default function AdminAnalyticsPage() {
   renderRef.current.cityAnalytics = () => (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
               Active Rentals by City
@@ -451,7 +523,7 @@ export default function AdminAnalyticsPage() {
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ height: "100%" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -476,7 +548,7 @@ export default function AdminAnalyticsPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {(data?.parkingUtilizationByCity ?? [])
+                  {parkingUtilization
                     .slice(0, 10)
                     .map((row, idx) => (
                       <TableRow key={`${row.city ?? "city"}-${idx}`}>
@@ -491,7 +563,7 @@ export default function AdminAnalyticsPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  {(data?.parkingUtilizationByCity?.length ?? 0) === 0 && (
+                  {parkingUtilization.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={3}>
                         <Typography variant="body2" color="text.secondary">
@@ -509,91 +581,308 @@ export default function AdminAnalyticsPage() {
     </Grid>
   );
 
-  renderRef.current.exportAnalytics = () => (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Export Analytics
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Download the current analytics snapshot (client-side export).
-            </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+  renderRef.current.exportAnalytics = () => {
+    // Build comprehensive export object with all analytics
+    const comprehensiveAnalytics = {
+      apiData: data,
+      computedAnalytics: {
+        rentalVehicles: {
+          cars: vehicleUsage?.cars ?? 0,
+          bikes: vehicleUsage?.bikes ?? 0,
+          scooters: vehicleUsage?.scooters ?? 0,
+          total: totalUsage,
+          distribution: {
+            carsPercent: carsPct * 100,
+            bikesPercent: bikesPct * 100,
+            scootersPercent: scootersPct * 100,
+          },
+        },
+        transitGateway: {
+          delayedRoutes: transitSummary.delayedRoutes,
+          averageDelayMinutes: transitSummary.averageDelayMinutes,
+          activeRoutes: transitSummary.activeRoutes,
+          averageCapacityPercent: transitSummary.averageCapacityPercent,
+          averageReliabilityScore: averageReliability,
+          highFrequencyRoutes: highFrequencyRoutes,
+          routesByType: routesByType,
+        },
+        parking: {
+          byCity: parkingUtilization,
+        },
+      },
+    };
+
+    return (
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" >
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                JSON Export
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Complete analytics snapshot including all computed metrics.
+              </Typography>
               <Button
                 variant="contained"
                 disabled={!data}
+                fullWidth
                 onClick={() => {
-                  if (!data) return;
                   downloadFile(
-                    `admin-analytics-${new Date().toISOString()}.json`,
+                    `admin-analytics-complete-${new Date().toISOString()}.json`,
                     "application/json",
-                    JSON.stringify(data, null, 2),
+                    JSON.stringify(comprehensiveAnalytics, null, 2),
                   );
                 }}
               >
-                Download JSON
+                Download Complete JSON
               </Button>
-              <Button
-                variant="outlined"
-                disabled={!data}
-                onClick={() => {
-                  if (!data) return;
-                  const rows = (data.activeRentalsByCity ?? []).map((r) => ({
-                    city: r.city ?? "Unknown",
-                    activeRentals: r.count ?? 0,
-                  }));
-                  downloadFile(
-                    `active-rentals-by-city-${new Date().toISOString()}.csv`,
-                    "text/csv",
-                    toCsv(rows),
-                  );
-                }}
-              >
-                Active rentals CSV
-              </Button>
-              <Button
-                variant="outlined"
-                disabled={!data}
-                onClick={() => {
-                  if (!data) return;
-                  const rows = (data.parkingUtilizationByCity ?? []).map(
-                    (r) => ({
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card variant="outlined" sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                CSV Exports
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Export specific analytics as CSV files.
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  variant="outlined"
+                  disabled={!data}
+                  size="small"
+                  onClick={() => {
+                    if (!data) return;
+                    const rows = (data.activeRentalsByCity ?? []).map((r) => ({
+                      city: r.city ?? "Unknown",
+                      activeRentals: r.count ?? 0,
+                    }));
+                    downloadFile(
+                      `active-rentals-by-city-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Active Rentals by City
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  disabled={parkingUtilization.length === 0}
+                  size="small"
+                  onClick={() => {
+                    if (parkingUtilization.length === 0) return;
+                    const rows = parkingUtilization.map((r) => ({
                       city: r.city ?? "Unknown",
                       utilizationPercent: r.utilizationPercent ?? 0,
                       availableSpots: r.availableSpots ?? 0,
                       totalSpots: r.totalSpots ?? 0,
-                    }),
-                  );
-                  downloadFile(
-                    `parking-utilization-by-city-${new Date().toISOString()}.csv`,
-                    "text/csv",
-                    toCsv(rows),
-                  );
-                }}
-              >
-                Parking CSV
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
+                    }));
+                    downloadFile(
+                      `parking-utilization-by-city-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Parking Utilization by City
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    const rows = [
+                      {
+                        metric: "Total Registered Users",
+                        value: data?.totalRegisteredUsers ?? 0,
+                      },
+                      {
+                        metric: "Completed Trips",
+                        value: data?.completedTrips ?? 0,
+                      },
+                      {
+                        metric: "Bike to Scooter Ratio",
+                        value: data?.bikeToScooterUsageRatio ?? 0,
+                      },
+                      {
+                        metric: "Total Vehicle Rentals",
+                        value: totalUsage,
+                      },
+                      {
+                        metric: "Vehicle: Cars",
+                        value: vehicleUsage?.cars ?? 0,
+                      },
+                      {
+                        metric: "Vehicle: Bikes",
+                        value: vehicleUsage?.bikes ?? 0,
+                      },
+                      {
+                        metric: "Vehicle: Scooters",
+                        value: vehicleUsage?.scooters ?? 0,
+                      },
+                      {
+                        metric: "Active Transit Routes",
+                        value: transitSummary.activeRoutes,
+                      },
+                      {
+                        metric: "Delayed Transit Routes",
+                        value: transitSummary.delayedRoutes,
+                      },
+                      {
+                        metric: "Average Transit Delay (min)",
+                        value: transitSummary.averageDelayMinutes,
+                      },
+                      {
+                        metric: "Average Transit Capacity %",
+                        value: transitSummary.averageCapacityPercent,
+                      },
+                      {
+                        metric: "Average Transit Reliability %",
+                        value: averageReliability,
+                      },
+                      {
+                        metric: "High-Frequency Routes",
+                        value: highFrequencyRoutes,
+                      },
+                      {
+                        metric: "Bus Routes",
+                        value: routesByType.BUS,
+                      },
+                      {
+                        metric: "Metro Routes",
+                        value: routesByType.METRO,
+                      },
+                      {
+                        metric: "REM Routes",
+                        value: routesByType.REM,
+                      },
+                      {
+                        metric: "Train Routes",
+                        value: routesByType.TRAIN,
+                      },
+                    ];
+                    downloadFile(
+                      `analytics-summary-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  All Metrics Summary
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    const rows = [
+                      {
+                        category: "Transit",
+                        metric: "Active Routes",
+                        value: transitSummary.activeRoutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Delayed Routes",
+                        value: transitSummary.delayedRoutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Delay (min)",
+                        value: transitSummary.averageDelayMinutes,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Capacity %",
+                        value: transitSummary.averageCapacityPercent,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "Avg Reliability %",
+                        value: averageReliability,
+                      },
+                      {
+                        category: "Transit",
+                        metric: "High-Freq Routes",
+                        value: highFrequencyRoutes,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Bus",
+                        value: routesByType.BUS,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Metro",
+                        value: routesByType.METRO,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "REM",
+                        value: routesByType.REM,
+                      },
+                      {
+                        category: "Routes by Type",
+                        metric: "Train",
+                        value: routesByType.TRAIN,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Cars",
+                        value: vehicleUsage?.cars ?? 0,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Bikes",
+                        value: vehicleUsage?.bikes ?? 0,
+                      },
+                      {
+                        category: "Rentals",
+                        metric: "Scooters",
+                        value: vehicleUsage?.scooters ?? 0,
+                      },
+                    ];
+                    downloadFile(
+                      `gateway-transit-analytics-${new Date().toISOString()}.csv`,
+                      "text/csv",
+                      toCsv(rows),
+                    );
+                  }}
+                >
+                  Gateway & Transit Analytics
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                What's Included
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <strong>JSON Export:</strong> Complete snapshot including API data
+                and all computed analytics (rentals, transit gateway, parking).
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>CSV Exports:</strong> Active rentals by city, parking
+                utilization by city, comprehensive metrics summary, and gateway
+                transit analytics.
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Export Notes
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Exports are generated from the currently loaded
-              `/api/admin/analytics/summary` response.
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
-  );
+    );
+  };
 
   const selectedTab =
     flux.currentState instanceof CityAnalytics

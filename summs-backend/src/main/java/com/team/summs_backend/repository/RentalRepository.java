@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.team.summs_backend.model.Rental;
@@ -26,4 +27,7 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Rental> findByReturnStationId(Long stationId);
 
     List<Rental> findByVehicleId(Long vehicleId);
+
+    @Query("SELECT r FROM Rental r WHERE r.vehicle.provider.id = :providerId AND r.status = :status")
+    List<Rental> findByProviderIdAndStatus(Long providerId, RentalStatus status);
 }

@@ -20,6 +20,7 @@ import GarageIcon from "@mui/icons-material/Garage";
 import RoadIcon from "@mui/icons-material/EditRoad";
 import { fetchParkingSpots, type ParkingSpotResponse } from "../api/parking";
 import { navigateToStation } from "../services/navigationService";
+import { SAMPLE_PARKING_SPOTS } from "../utilities/parkingData";
 
 function getParkingIcon(type: string | undefined) {
   switch (type) {
@@ -51,100 +52,6 @@ function getAvailabilityColor(percent: number): "success" | "warning" | "error" 
   return "error";
 }
 
-// Hard-coded sample data for demonstration
-const SAMPLE_PARKING_SPOTS: ParkingSpotResponse[] = [
-  {
-    id: 1,
-    name: "Downtown Parking Garage",
-    address: "123 Ste-Catherine St W, Montreal",
-    latitude: 45.5017,
-    longitude: -73.5673,
-    parkingType: "GARAGE",
-    totalSpots: 200,
-    availableSpots: 45,
-    pricePerHour: 4.50,
-    status: "AVAILABLE",
-    operatingHours: "24/7",
-    hasEvCharging: true,
-    hasDisabledAccess: true,
-  },
-  {
-    id: 2,
-    name: "McGill Street Parking",
-    address: "800 McGill St, Montreal",
-    latitude: 45.5048,
-    longitude: -73.5572,
-    parkingType: "STREET",
-    totalSpots: 30,
-    availableSpots: 8,
-    pricePerHour: 3.00,
-    status: "AVAILABLE",
-    operatingHours: "6:00 AM - 11:00 PM",
-    hasEvCharging: false,
-    hasDisabledAccess: true,
-  },
-  {
-    id: 3,
-    name: "Old Port Parking Lot",
-    address: "333 de la Commune St W, Montreal",
-    latitude: 45.5075,
-    longitude: -73.5545,
-    parkingType: "LOT",
-    totalSpots: 150,
-    availableSpots: 0,
-    pricePerHour: 5.00,
-    status: "OCCUPIED",
-    operatingHours: "7:00 AM - 12:00 AM",
-    hasEvCharging: true,
-    hasDisabledAccess: true,
-  },
-  {
-    id: 4,
-    name: "Place des Arts Garage",
-    address: "175 Ste-Catherine St W, Montreal",
-    latitude: 45.5081,
-    longitude: -73.5668,
-    parkingType: "GARAGE",
-    totalSpots: 300,
-    availableSpots: 120,
-    pricePerHour: 6.00,
-    status: "AVAILABLE",
-    operatingHours: "24/7",
-    hasEvCharging: true,
-    hasDisabledAccess: true,
-  },
-  {
-    id: 5,
-    name: "Plateau Street Parking",
-    address: "4000 St-Denis St, Montreal",
-    latitude: 45.5225,
-    longitude: -73.5816,
-    parkingType: "STREET",
-    totalSpots: 20,
-    availableSpots: 3,
-    pricePerHour: 2.50,
-    status: "AVAILABLE",
-    operatingHours: "8:00 AM - 9:00 PM",
-    hasEvCharging: false,
-    hasDisabledAccess: false,
-  },
-  {
-    id: 6,
-    name: "Central Station Lot",
-    address: "895 de la Gauchetière St W, Montreal",
-    latitude: 45.4998,
-    longitude: -73.5671,
-    parkingType: "LOT",
-    totalSpots: 100,
-    availableSpots: 25,
-    pricePerHour: 4.00,
-    status: "AVAILABLE",
-    operatingHours: "5:00 AM - 1:00 AM",
-    hasEvCharging: false,
-    hasDisabledAccess: true,
-  },
-];
-
 export default function ParkingPage() {
   const [parkingSpots, setParkingSpots] = React.useState<ParkingSpotResponse[]>([]);
   const [typeFilter, setTypeFilter] = React.useState<string>("ALL");
@@ -157,7 +64,7 @@ export default function ParkingPage() {
     try {
       const type = typeFilter !== "ALL" ? typeFilter : undefined;
       let data = await fetchParkingSpots(type, showAvailableOnly);
-      
+
       // Use sample data if no data from backend
       if (data.length === 0) {
         data = SAMPLE_PARKING_SPOTS;
@@ -169,7 +76,7 @@ export default function ParkingPage() {
           data = data.filter(spot => (spot.availableSpots ?? 0) > 0);
         }
       }
-      
+
       setParkingSpots(data);
     } catch (err) {
       console.error("Failed to load parking spots:", err);
@@ -261,8 +168,8 @@ export default function ParkingPage() {
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ 
-          display: "grid", 
+        <Box sx={{
+          display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
           gap: 2,
           pb: 2
@@ -270,10 +177,10 @@ export default function ParkingPage() {
           {parkingSpots.map((spot) => {
             const availPercent = getAvailabilityPercent(spot.availableSpots ?? 0, spot.totalSpots ?? 0);
             return (
-              <Card 
+              <Card
                 key={spot.id}
                 elevation={1}
-                sx={{ 
+                sx={{
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
                     transform: "translateY(-2px)",
@@ -285,9 +192,9 @@ export default function ParkingPage() {
                   {/* Header */}
                   <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Box sx={{ 
-                        p: 1, 
-                        borderRadius: 1, 
+                      <Box sx={{
+                        p: 1,
+                        borderRadius: 1,
                         bgcolor: availPercent > 0 ? "success.light" : "error.light",
                         display: "flex"
                       }}>
@@ -302,7 +209,7 @@ export default function ParkingPage() {
                         </Typography>
                       </Box>
                     </Box>
-                    <Chip 
+                    <Chip
                       label={spot.status}
                       size="small"
                       color={getStatusColor(spot.status)}
@@ -321,9 +228,9 @@ export default function ParkingPage() {
                         {spot.availableSpots}/{spot.totalSpots} spots
                       </Typography>
                     </Box>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={availPercent} 
+                    <LinearProgress
+                      variant="determinate"
+                      value={availPercent}
                       color={getAvailabilityColor(availPercent)}
                       sx={{ height: 8, borderRadius: 1 }}
                     />

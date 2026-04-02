@@ -35,4 +35,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     @Query("SELECT v FROM Vehicle v LEFT JOIN FETCH v.station WHERE v.provider.id = :providerId AND v.id = :vehicleId")
     java.util.Optional<Vehicle> findByIdAndProviderIdWithStation(Long vehicleId, Long providerId);
+
+    List<Vehicle> findByProviderId(Long providerId);
 }
