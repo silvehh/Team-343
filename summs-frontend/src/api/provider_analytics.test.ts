@@ -81,6 +81,11 @@ describe("fetchProviderAnalyticsSummary", () => {
     expect(summary.fleetUtilization!.totalVehicles).toBe(7);
     expect(summary.rentalActivity!.completedRentals).toBe(3);
     expect(summary.efficiencyMetrics!.averageRevenuePerRental).toBe(54.12);
+    expect(summary.fleetUtilization!.availableBikes).toBe(summary.fleetUtilization!.rentedBikes!);
+    expect(summary.fleetUtilization!.availableCars).toBeGreaterThan(summary.fleetUtilization!.rentedCars!);
+    expect(summary.fleetUtilization!.availableScooters).toBeLessThan(summary.fleetUtilization!.rentedScooters!);
+    expect(summary.fleetUtilization!.availableVehicles).toBe(summary.fleetUtilization!.availableBikes! + summary.fleetUtilization!.availableCars! + summary.fleetUtilization!.availableScooters!);
+    expect(summary.fleetUtilization!.rentedVehicles).toBe(summary.fleetUtilization!.rentedBikes! + summary.fleetUtilization!.rentedCars! + summary.fleetUtilization!.rentedScooters!);
 
     expect(getMock).toHaveBeenCalledWith("/api/provider/analytics/summary", {
       params: { header: {
