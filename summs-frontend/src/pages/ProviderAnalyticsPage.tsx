@@ -141,6 +141,9 @@ export default function ProviderAnalyticsPage() {
 
   const isLoading = analytics.status === "loading";
   const hasError = analytics.status === "failed";
+  const bikeTrigger = (fleet?.availableBikes ?? 0) < (fleet?.rentedBikes ?? 0) ? true : false;
+  const carTrigger = (fleet?.availableCars ?? 0) < (fleet?.rentedCars ?? 0) ? true : false;
+  const scooterTrigger = (fleet?.availableScooters ?? 0) < (fleet?.rentedScooters ?? 0) ? true : false;
 
   return (
     <Box
@@ -153,6 +156,11 @@ export default function ProviderAnalyticsPage() {
         bgcolor: "background.default",
       }}
     >
+      {(bikeTrigger || carTrigger || scooterTrigger) && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <strong>Warning: </strong>Most, if not all of your {bikeTrigger ? (carTrigger ? (scooterTrigger ? "bikes, cars, and scooters" : "bikes and cars") : (scooterTrigger ? "bikes and scooters" : "bikes")) : carTrigger ? (scooterTrigger ? "cars and scooters" : "cars") : "scooters"} are currently rented out! Consider <a href="/provider/vehicles">adding more</a> to meet demand.
+        </Alert>
+      )}
       <Stack
         direction={{ xs: "column", md: "row" }}
         spacing={2}
