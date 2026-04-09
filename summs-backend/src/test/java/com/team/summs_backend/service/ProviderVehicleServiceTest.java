@@ -300,4 +300,19 @@ class ProviderVehicleServiceTest {
 
         assertTrue(response.available());
     }
+
+    @Test
+    void reclaimVehicleShouldThrowWhenNoActiveRental() {
+        ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(20.00));
+
+        when(mobilityProviderRepository.existsById(1L)).thenReturn(true);
+        when(vehicleRepository.findByIdAndProviderIdWithStation(1L, 1L))
+                .thenReturn(Optional.of(vehicle));
+        when(rentalRepository.findByProviderIdAndStatus(1L, RentalStatus.ACTIVE))
+                .thenReturn(List.of());
+
+        InvalidInputException ex = assertThrows(InvalidInputException.class,
+                () -> providerVehicleService.reclaimVehicle(1L, 1L, request));
+        assertEquals("No active rental found for this vehicle", ex.getMessage());
+    }
 }

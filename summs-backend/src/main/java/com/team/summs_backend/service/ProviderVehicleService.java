@@ -139,6 +139,11 @@ public class ProviderVehicleService {
                 activeRental = rental;
             }
         }
+
+        if (activeRental == null) {
+            throw new InvalidInputException("No active rental found for this vehicle");
+        }
+
         Station returnStation = activeRental.getPickupStation();
 
         int capacity = getStationCapacityForType(returnStation, vehicle.getVehicleType());
