@@ -2,6 +2,7 @@ package com.team.summs_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,8 @@ import com.team.summs_backend.exception.StationFullException;
 import com.team.summs_backend.exception.StationNotFoundException;
 import com.team.summs_backend.exception.VehicleNotFoundException;
 import com.team.summs_backend.model.MobilityProvider;
+import com.team.summs_backend.model.Rental;
+import com.team.summs_backend.model.RentalStatus;
 import com.team.summs_backend.model.Station;
 import com.team.summs_backend.model.Vehicle;
 import com.team.summs_backend.model.VehicleType;
@@ -53,6 +56,7 @@ class ProviderVehicleServiceTest {
     private MobilityProvider provider;
     private Station station;
     private Vehicle vehicle;
+    private Rental rental;
 
     @BeforeEach
     void setUp() {
@@ -74,7 +78,18 @@ class ProviderVehicleServiceTest {
         vehicle.setProvider(provider);
         vehicle.setStation(station);
         vehicle.setPricePerHour(BigDecimal.valueOf(10.00));
-        vehicle.setAvailable(true);
+        vehicle.setAvailable(false);
+
+        rental = new Rental();
+        rental.setId(1L);
+        rental.setUser(null); // User is not relevant for this test
+        rental.setVehicle(vehicle);
+        rental.setStatus(RentalStatus.ACTIVE);
+        rental.setPickupStation(station);
+        rental.setStartTime(java.time.LocalDateTime.now().minusHours(1));
+
+        rentalRepository.save(rental);
+
     }
 
     @Test
@@ -91,7 +106,7 @@ class ProviderVehicleServiceTest {
     @Test
     void getProviderVehiclesShouldThrowWhenProviderIdIsNull() {
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.getProviderVehicles(null));
+                () -> providerVehicleService.getProviderVehicles(null));
         assertEquals("Provider ID is required", ex.getMessage());
     }
 
@@ -100,7 +115,7 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.existsById(99L)).thenReturn(false);
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.getProviderVehicles(99L));
+                () -> providerVehicleService.getProviderVehicles(99L));
         assertEquals("Mobility provider not found", ex.getMessage());
     }
 
@@ -124,7 +139,7 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.findById(1L)).thenReturn(Optional.of(provider));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Invalid vehicle type: PLANE. Must be CAR, BIKE, or SCOOTER", ex.getMessage());
     }
 
@@ -135,8 +150,9 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.findById(1L)).thenReturn(Optional.of(provider));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
-        assertEquals("Your account is not registered to manage car vehicles. Your mobility options are: Bike", ex.getMessage());
+                () -> providerVehicleService.addVehicle(1L, request));
+        assertEquals("Your account is not registered to manage car vehicles. Your mobility options are: Bike",
+                ex.getMessage());
     }
 
     @Test
@@ -145,7 +161,7 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.findById(1L)).thenReturn(Optional.of(provider));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Price per hour is required", ex.getMessage());
     }
 
@@ -155,7 +171,7 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.findById(1L)).thenReturn(Optional.of(provider));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Price per hour must be greater than zero", ex.getMessage());
     }
 
@@ -166,7 +182,7 @@ class ProviderVehicleServiceTest {
         when(stationRepository.findById(99L)).thenReturn(Optional.empty());
 
         StationNotFoundException ex = assertThrows(StationNotFoundException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Station not found", ex.getMessage());
     }
 
@@ -178,7 +194,7 @@ class ProviderVehicleServiceTest {
         when(vehicleRepository.countByStationIdAndVehicleType(1L, VehicleType.CAR)).thenReturn(10L);
 
         StationFullException ex = assertThrows(StationFullException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Station Station A is full for cars (capacity: 10, current: 10)", ex.getMessage());
     }
 
@@ -202,7 +218,7 @@ class ProviderVehicleServiceTest {
         when(vehicleRepository.findByIdAndProviderIdWithStation(99L, 1L)).thenReturn(Optional.empty());
 
         VehicleNotFoundException ex = assertThrows(VehicleNotFoundException.class,
-            () -> providerVehicleService.updateVehicle(1L, 99L, request));
+                () -> providerVehicleService.updateVehicle(1L, 99L, request));
         assertEquals("Vehicle not found or does not belong to this provider", ex.getMessage());
     }
 
@@ -220,12 +236,13 @@ class ProviderVehicleServiceTest {
         when(vehicleRepository.countByStationIdAndVehicleType(2L, VehicleType.CAR)).thenReturn(5L);
 
         StationFullException ex = assertThrows(StationFullException.class,
-            () -> providerVehicleService.updateVehicle(1L, 1L, request));
+                () -> providerVehicleService.updateVehicle(1L, 1L, request));
         assertEquals("Station Station B is full for cars (capacity: 5, current: 5)", ex.getMessage());
     }
 
     @Test
     void deleteVehicleShouldSucceed() {
+        vehicle.setAvailable(true);
         when(mobilityProviderRepository.existsById(1L)).thenReturn(true);
         when(vehicleRepository.findByIdAndProviderIdWithStation(1L, 1L)).thenReturn(Optional.of(vehicle));
         when(rentalRepository.findByVehicleId(1L)).thenReturn(List.of());
@@ -242,7 +259,7 @@ class ProviderVehicleServiceTest {
         when(vehicleRepository.findByIdAndProviderIdWithStation(1L, 1L)).thenReturn(Optional.of(vehicle));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.deleteVehicle(1L, 1L));
+                () -> providerVehicleService.deleteVehicle(1L, 1L));
         assertEquals("Cannot delete a vehicle that is currently rented out", ex.getMessage());
     }
 
@@ -251,7 +268,7 @@ class ProviderVehicleServiceTest {
         ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(15.00));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(null, request));
+                () -> providerVehicleService.addVehicle(null, request));
         assertEquals("Provider ID is required", ex.getMessage());
     }
 
@@ -261,7 +278,26 @@ class ProviderVehicleServiceTest {
         when(mobilityProviderRepository.findById(1L)).thenReturn(Optional.of(provider));
 
         InvalidInputException ex = assertThrows(InvalidInputException.class,
-            () -> providerVehicleService.addVehicle(1L, request));
+                () -> providerVehicleService.addVehicle(1L, request));
         assertEquals("Vehicle type is required", ex.getMessage());
+    }
+
+    @Test
+    void reclaimVehicleShouldSucceed() {
+        ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(20.00));
+
+        when(mobilityProviderRepository.existsById(1L)).thenReturn(true);
+        when(vehicleRepository.findByIdAndProviderIdWithStation(1L, 1L))
+                .thenReturn(Optional.of(vehicle));
+        when(rentalRepository.findByProviderIdAndStatus(1L, RentalStatus.ACTIVE))
+                .thenReturn(List.of(rental));
+        when(vehicleRepository.countByStationIdAndVehicleType(1L, VehicleType.CAR))
+                .thenReturn(0L);
+        when(vehicleRepository.save(any(Vehicle.class)))
+                .thenReturn(vehicle);
+
+        VehicleResponse response = providerVehicleService.reclaimVehicle(1L, 1L, request);
+
+        assertTrue(response.available());
     }
 }

@@ -29,7 +29,7 @@ class VehicleControllerTest {
     @Test
     void getAvailableVehiclesShouldReturnOk() {
         VehicleResponse vehicleResponse = new VehicleResponse(
-            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(10.00), 1L, "Station A");
+            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(10.00), 1L, "Station A", true);
 
         when(vehicleService.getAvailableVehicles(null, null)).thenReturn(List.of(vehicleResponse));
 
