@@ -33,7 +33,7 @@ class ProviderVehicleControllerTest {
     @Test
     void getProviderVehiclesShouldReturnOk() {
         VehicleResponse vehicleResponse = new VehicleResponse(
-            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(10.00), 1L, "Station A");
+            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(10.00), 1L, "Station A", true);
 
         when(providerVehicleService.getProviderVehicles(1L)).thenReturn(List.of(vehicleResponse));
 
@@ -54,7 +54,7 @@ class ProviderVehicleControllerTest {
     void addVehicleShouldReturnCreated() {
         ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(15.00));
         VehicleResponse serviceResponse = new VehicleResponse(
-            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(15.00), 1L, "Station A");
+            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(15.00), 1L, "Station A", true);
 
         when(providerVehicleService.addVehicle(1L, request)).thenReturn(serviceResponse);
 
@@ -77,7 +77,7 @@ class ProviderVehicleControllerTest {
     void updateVehicleShouldReturnOk() {
         ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(20.00));
         VehicleResponse serviceResponse = new VehicleResponse(
-            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(20.00), 1L, "Station A");
+            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(20.00), 1L, "Station A", true);
 
         when(providerVehicleService.updateVehicle(1L, 1L, request)).thenReturn(serviceResponse);
 
@@ -100,5 +100,19 @@ class ProviderVehicleControllerTest {
     void deleteVehicleShouldThrowForNonProvider() {
         assertThrows(UnauthorizedException.class,
             () -> providerVehicleController.deleteVehicle("USER", 1L, 1L));
+    }
+
+    @Test
+    void reclaimVehicleShouldReturnOk() {
+        ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(20.00));
+        VehicleResponse serviceResponse = new VehicleResponse(
+            1L, "CAR", "provider1", 1L, BigDecimal.valueOf(20.00), 1L, "Station A", false);
+
+        when(providerVehicleService.reclaimVehicle(1L, 1L, request)).thenReturn(serviceResponse);
+
+        ResponseEntity<VehicleResponse> response =
+            providerVehicleController.reclaimVehicle("MOBILITY_PROVIDER", 1L, 1L, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }

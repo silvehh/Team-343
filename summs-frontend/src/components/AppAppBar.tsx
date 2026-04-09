@@ -122,7 +122,7 @@ export default function AppAppBar() {
               >
                 Transit
               </Button>
-              {isAuthenticated && accountType !== "ADMIN" && (
+              {isAuthenticated && !["ADMIN", "MOBILITY_PROVIDER"].includes(accountType) && (
                 <Button
                   variant="text"
                   color="info"

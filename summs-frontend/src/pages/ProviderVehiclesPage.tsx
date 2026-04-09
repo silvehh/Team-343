@@ -34,10 +34,12 @@ import {
   addProviderVehicle,
   updateProviderVehicle,
   deleteProviderVehicle,
+  reclaimProviderVehicle,
   type ProviderVehicleResponse,
   type ProviderVehicleRequest,
 } from "../api/provider";
 import { fetchStations, type StationResponse } from "../api/stations";
+import { RestartAlt } from "@mui/icons-material";
 
 interface VehicleForm {
   vehicleType: string;
@@ -97,6 +99,8 @@ export default function ProviderVehiclesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletingVehicle, setDeletingVehicle] = React.useState<ProviderVehicleResponse | null>(null);
   const [selectedStationId, setSelectedStationId] = React.useState<number | null>(null);
+  const [reclaimDialogOpen, setReclaimDialogOpen] = React.useState(false);
+  const [reclaimingVehicle, setReclaimingVehicle] = React.useState<ProviderVehicleResponse | null>(null);
 
   const isProvider = isAuthenticated && accountType === "MOBILITY_PROVIDER";
 
@@ -118,6 +122,8 @@ export default function ProviderVehiclesPage() {
       console.error("Failed to load stations:", err);
     }
   }, []);
+
+  
 
   React.useEffect(() => {
     if (!isProvider) {
@@ -154,6 +160,11 @@ export default function ProviderVehiclesPage() {
   const openDeleteDialog = (vehicle: ProviderVehicleResponse) => {
     setDeletingVehicle(vehicle);
     setDeleteDialogOpen(true);
+  };
+
+  const openReclaimDialog = (vehicle: ProviderVehicleResponse) => {
+    setReclaimingVehicle(vehicle);
+    setReclaimDialogOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -206,6 +217,26 @@ export default function ProviderVehiclesPage() {
       setDeleteDialogOpen(false);
     }
   };
+
+  const handleReclaim = async () => {
+    const request: ProviderVehicleRequest = {
+      vehicleType: reclaimingVehicle!.vehicleType,
+      stationId: Number(reclaimingVehicle!.stationId),
+      pricePerHour: Number(reclaimingVehicle!.pricePerHour),
+    };
+    if (!reclaimingVehicle || !userId) return;
+    try { await reclaimProviderVehicle(userId, reclaimingVehicle.id, request); 
+      setSnackbar({ open: true, message: "Vehicle reclaimed", severity: "success" });
+      setReclaimDialogOpen(false);
+      setReclaimingVehicle(null);
+      loadVehicles();
+      loadStations();
+
+    } catch (err) {
+      setSnackbar({ open: true, message: (err as Error).message, severity: "error" });
+      setReclaimDialogOpen(false);
+    }
+  }
 
   const getStationName = (stationId: number | null) =>
     stations.find((s) => s.id === stationId)?.name ?? "Unknown";
@@ -460,14 +491,25 @@ export default function ProviderVehiclesPage() {
                     {vehicleLabel(vehicle.vehicleType)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" noWrap>
-                    {vehicle.stationName ?? "No station"} &middot;{" "}
+                    {(vehicle.stationName ?? "No station")} &middot;{" "}
                     <AttachMoneyIcon sx={{ fontSize: 12, verticalAlign: "middle" }} />
                     {vehicle.pricePerHour}/hr
                   </Typography>
                 </Box>
               </Box>
+                  
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Button
+                {vehicle.stationName === null ? (
+                    <Button
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  startIcon={<RestartAlt />}
+                  onClick={() => openReclaimDialog(vehicle)}
+                >
+                  Reclaim
+                </Button>
+                  ): <Button
                   fullWidth
                   variant="outlined"
                   size="small"
@@ -475,7 +517,7 @@ export default function ProviderVehiclesPage() {
                   onClick={() => openEditDialog(vehicle)}
                 >
                   Edit
-                </Button>
+                </Button>}
                 <IconButton size="small" color="error" onClick={() => openDeleteDialog(vehicle)}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -578,6 +620,24 @@ export default function ProviderVehiclesPage() {
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" color="error" onClick={handleDelete}>
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reclaim Confirmation Dialog */}
+      <Dialog open={reclaimDialogOpen} onClose={() => setReclaimDialogOpen(false)}>
+        <DialogTitle>Reclaim Vehicle</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to reclaim this{" "}
+            <strong>{reclaimingVehicle ? vehicleLabel(reclaimingVehicle.vehicleType) : ""}</strong>? This action cannot be
+            undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReclaimDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleReclaim}>
+            Reclaim
           </Button>
         </DialogActions>
       </Dialog>

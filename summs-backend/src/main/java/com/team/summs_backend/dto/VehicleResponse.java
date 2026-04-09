@@ -12,5 +12,6 @@ public record VehicleResponse(
     Long providerId,
     BigDecimal pricePerHour,
     Long stationId,
-    String stationName
+    String stationName,
+    boolean available
 ) {}

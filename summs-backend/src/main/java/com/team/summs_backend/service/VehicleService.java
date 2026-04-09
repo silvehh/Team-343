@@ -58,7 +58,8 @@ public class VehicleService {
             vehicle.getProvider().getId(),
             vehicle.getPricePerHour(),
             vehicle.getStation() != null ? vehicle.getStation().getId() : null,
-            vehicle.getStation() != null ? vehicle.getStation().getName() : null
+            vehicle.getStation() != null ? vehicle.getStation().getName() : null,
+            vehicle.isAvailable()
         );
     }
 }
