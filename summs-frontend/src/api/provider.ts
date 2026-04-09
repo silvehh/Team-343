@@ -74,3 +74,16 @@ export async function deleteProviderVehicle(providerId: number, vehicleId: numbe
     throw new Error(body?.message || `Request failed with status ${response.status}`);
   }
 }
+
+export async function reclaimProviderVehicle(
+  providerId: number,
+  vehicleId: number,
+  body: ProviderVehicleRequest,
+): Promise<ProviderVehicleResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/provider/vehicles/${vehicleId}/reclaim`, {
+    method: "PUT",
+    headers: providerHeaders(providerId),
+    body: JSON.stringify(body),
+  });
+  return handleResponse<ProviderVehicleResponse>(response);
+}

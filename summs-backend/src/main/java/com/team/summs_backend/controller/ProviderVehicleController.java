@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.team.summs_backend.dto.ProviderVehicleRequest;
+import com.team.summs_backend.dto.RentalResponse;
 import com.team.summs_backend.dto.VehicleResponse;
 import com.team.summs_backend.exception.UnauthorizedException;
 import com.team.summs_backend.service.ProviderVehicleService;
@@ -44,7 +45,7 @@ public class ProviderVehicleController {
             @RequestBody ProviderVehicleRequest request) {
         requireProvider(accountType);
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(providerVehicleService.addVehicle(providerId, request));
+                .body(providerVehicleService.addVehicle(providerId, request));
     }
 
     @PutMapping("/{vehicleId}")
@@ -65,6 +66,16 @@ public class ProviderVehicleController {
         requireProvider(accountType);
         providerVehicleService.deleteVehicle(providerId, vehicleId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{vehicleId}/reclaim")
+    public ResponseEntity<VehicleResponse> reclaimVehicle(
+            @RequestHeader("X-Account-Type") String accountType,
+            @RequestHeader("X-User-Id") Long providerId,
+            @PathVariable Long vehicleId,
+            @RequestBody ProviderVehicleRequest request) {
+        requireProvider(accountType);
+        return ResponseEntity.ok(providerVehicleService.reclaimVehicle(providerId, vehicleId, request));
     }
 
     private void requireProvider(String accountType) {
