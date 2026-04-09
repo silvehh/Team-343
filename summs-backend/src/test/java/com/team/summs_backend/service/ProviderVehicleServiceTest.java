@@ -315,4 +315,23 @@ class ProviderVehicleServiceTest {
                 () -> providerVehicleService.reclaimVehicle(1L, 1L, request));
         assertEquals("No active rental found for this vehicle", ex.getMessage());
     }
+
+    @Test
+    void reclaimVehicleShouldThrowWhenStationIsFullAndNoAlternativeStationAvailable() {
+        ProviderVehicleRequest request = new ProviderVehicleRequest("CAR", 1L, BigDecimal.valueOf(20.00));
+
+        when(mobilityProviderRepository.existsById(1L)).thenReturn(true);
+        when(vehicleRepository.findByIdAndProviderIdWithStation(1L, 1L))
+                .thenReturn(Optional.of(vehicle));
+        when(rentalRepository.findByProviderIdAndStatus(1L, RentalStatus.ACTIVE))
+                .thenReturn(List.of(rental));
+        
+        when(vehicleRepository.countByStationIdAndVehicleType(1L, VehicleType.CAR))
+                .thenReturn(10L);
+
+        StationFullException ex = assertThrows(StationFullException.class,
+                () -> providerVehicleService.reclaimVehicle(1L, 1L, request));
+        assertEquals("Station " + station.getName() + " is full for " + vehicle.getVehicleType().name().toLowerCase() + "s" +
+                " (capacity: " + station.getCarCapacity() + ", current: " + vehicleRepository.countByStationIdAndVehicleType(station.getId(), vehicle.getVehicleType()) + ")", ex.getMessage());
+    }
 }

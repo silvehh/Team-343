@@ -161,6 +161,8 @@ public class ProviderVehicleService {
             }
         }
 
+        validateStationCapacity(returnStation, vehicle.getVehicleType());
+
         LocalDateTime now = LocalDateTime.now();
         long hoursElapsed = Math.max(1, Duration.between(activeRental.getStartTime(), now).toHours());
         BigDecimal totalCost = vehicle.getPricePerHour()
