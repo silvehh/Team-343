@@ -4,6 +4,7 @@ import {
   addProviderVehicle,
   updateProviderVehicle,
   deleteProviderVehicle,
+  reclaimProviderVehicle,
 } from "./provider";
 import type { ProviderVehicleRequest } from "./provider";
 
@@ -169,4 +170,31 @@ describe("provider API", () => {
       );
     });
   });
+
+  describe("reclaimProviderVehicle", () => {
+    it("sends PUT to reclaim endpoint with correct URL, headers, and body", async () => {
+      const reclaimed = { id: 99, ...vehicleBody };
+      fetchMock.mockResolvedValue(mockResponse(reclaimed));
+      const result = await reclaimProviderVehicle(42, 99, vehicleBody);
+
+      expect(result).toEqual(reclaimed);
+      const url = fetchMock.mock.calls[0][0] as string;
+      expect(url).toContain("/api/provider/vehicles/99/reclaim");
+      expect(fetchMock).toHaveBeenCalledWith(url, {
+        method: "PUT",
+        headers: expectedHeaders(42),
+        body: JSON.stringify(vehicleBody),
+    });
+    });
+    it("throws on error response", async () => {
+      fetchMock.mockResolvedValue(
+        mockFailedResponse({ message: "Not found" }, 404),
+      );
+
+      await expect(
+        updateProviderVehicle(42, 99, vehicleBody),
+      ).rejects.toThrow("Not found");
+    });
+  }
+);
 });
